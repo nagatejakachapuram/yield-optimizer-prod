@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -12,18 +12,16 @@ contract MockSwap {
     IERC20 public usdy;
     AggregatorV3Interface internal priceFeed;
     
-    // Sepolia USDC/USD Price Feed address
-    address constant USDC_PRICE_FEED = 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E;
-    
     uint256 public constant USDC_DECIMALS = 6;
     uint256 public constant USDY_DECIMALS = 18;
 
-    constructor(address _usdc, address _usdy) {
+    constructor(address _usdc, address _usdy, address _priceFeed) {
         require(_usdc != address(0), "Invalid USDC address");
         require(_usdy != address(0), "Invalid USDY address");
+        require(_priceFeed != address(0), "Invalid price feed address");
         usdc = IERC20(_usdc);
         usdy = IERC20(_usdy);
-        priceFeed = AggregatorV3Interface(USDC_PRICE_FEED);
+        priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
     function getLatestPrice() public view returns (uint256) {
