@@ -2,66 +2,58 @@
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../Interfaces/AggregatorV3Interface.sol";
 
-contract MockSwap is ReentrancyGuard {
-    mapping(address => uint256) public rates; // Exchange rates with 18 decimals
-    address public owner;
+contract MockSwap {
+    using SafeERC20 for IERC20;
+    
+    IERC20 public usdc;
+    IERC20 public usdy;
+    AggregatorV3Interface internal priceFeed;
+    
+    // Sepolia USDC/USD Price Feed address
+    address constant USDC_PRICE_FEED = 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E;
+    
+    uint256 public constant USDC_DECIMALS = 6;
+    uint256 public constant USDY_DECIMALS = 18;
 
-    event Swap(
-        address indexed fromToken,
-        address indexed toToken,
-        address indexed user,
-        uint256 amountIn,
-        uint256 amountOut
-    );
-
-    constructor() {
-        owner = msg.sender;
+    constructor(address _usdc, address _usdy) {
+        require(_usdc != address(0), "Invalid USDC address");
+        require(_usdy != address(0), "Invalid USDY address");
+        usdc = IERC20(_usdc);
+        usdy = IERC20(_usdy);
+        priceFeed = AggregatorV3Interface(USDC_PRICE_FEED);
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
+    function getLatestPrice() public view returns (uint256) {
+        (
+            /* uint80 roundID */,
+            int price,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
+        ) = priceFeed.latestRoundData();
+        require(price > 0, "Invalid price");
+        return uint256(price);
     }
 
-    // Set exchange rate for a token pair
-    function setRate(address token, uint256 rate) external onlyOwner {
-        require(rate > 0, "Invalid rate");
-        rates[token] = rate;
-    }
-
-    // Mock swap function
-    function swap(
-        address fromToken,
-        address toToken,
-        uint256 amountIn
-    ) external nonReentrant returns (uint256 amountOut) {
-        require(rates[fromToken] > 0 && rates[toToken] > 0, "Invalid tokens");
+    function swapUSDYtoUSDC(uint256 usdyAmount) external returns (uint256) {
+        require(usdyAmount > 0, "Amount must be greater than 0");
         
-        // Calculate the amount out based on mock rates
-        amountOut = (amountIn * rates[toToken]) / rates[fromToken];
+        // Get USDY price from sender
+        usdy.safeTransferFrom(msg.sender, address(this), usdyAmount);
         
-        // Transfer tokens
-        require(
-            IERC20(fromToken).transferFrom(msg.sender, address(this), amountIn),
-            "Transfer failed"
-        );
-        require(
-            IERC20(toToken).transfer(msg.sender, amountOut),
-            "Transfer failed"
-        );
-
-        emit Swap(fromToken, toToken, msg.sender, amountIn, amountOut);
+        // Get latest USDC price from Chainlink and calculate USDC amount
+        uint256 usdcPrice = getLatestPrice();
+        uint256 usdcAmount = (usdyAmount * usdcPrice * 10**USDC_DECIMALS) / (10**USDY_DECIMALS * 10**8); // Chainlink price feeds use 8 decimals
         
-        return amountOut;
-    }
-
-    // Function to withdraw tokens (for testing purposes)
-    function withdrawToken(address token, uint256 amount) external onlyOwner {
-        require(
-            IERC20(token).transfer(owner, amount),
-            "Withdrawal failed"
-        );
+        // Check if we have enough USDC
+        require(usdc.balanceOf(address(this)) >= usdcAmount, "Insufficient USDC liquidity");
+        
+        // Transfer USDC to sender
+        usdc.safeTransfer(msg.sender, usdcAmount);
+        
+        return usdcAmount;
     }
 }

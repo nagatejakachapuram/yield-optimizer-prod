@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../Interfaces/IStrategy.sol";
+import "../Interfaces/IMockSwap.sol"; // Add this line
 
 contract Vault is ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -12,7 +13,9 @@ contract Vault is ReentrancyGuard {
     mapping(address => uint256) public userDeposits;
     uint256 public totalValueLocked;
     IERC20 public usdc;
+    IERC20 public usdy;
     address public admin;
+    address public mockSwap;
 
     mapping(address => bool) public approvedStrategies;
 
@@ -26,11 +29,21 @@ contract Vault is ReentrancyGuard {
         uint256 amount
     );
 
-    constructor(address _usdcAddress, address _admin) {
+    constructor(
+        address _usdcAddress,
+        address _usdyAddress,
+        address _mockSwap,
+        address _admin
+    ) {
         require(_usdcAddress != address(0), "Invalid USDC address");
+        require(_usdyAddress != address(0), "Invalid USDY address");
+        require(_mockSwap != address(0), "Invalid MockSwap address");
         require(_admin != address(0), "Invalid admin address");
+
         admin = _admin;
         usdc = IERC20(_usdcAddress);
+        usdy = IERC20(_usdyAddress);
+        mockSwap = _mockSwap;
     }
 
     error NotAdmin();
@@ -41,12 +54,18 @@ contract Vault is ReentrancyGuard {
 
     function deposit(uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be greater than zero");
+        
+        // Only accept USDY deposits
+        usdy.safeTransferFrom(msg.sender, address(this), amount);
+        
+        // Immediately swap USDY to USDC
+        usdy.approve(mockSwap, amount);
+        uint256 usdcReceived = IMockSwap(mockSwap).swapUSDYtoUSDC(amount);
+        
+        userDeposits[msg.sender] += usdcReceived;
+        totalValueLocked += usdcReceived;
 
-        userDeposits[msg.sender] += amount;
-        totalValueLocked += amount;
-
-        usdc.safeTransferFrom(msg.sender, address(this), amount);
-        emit DepositSuccessful(msg.sender, amount);
+        emit DepositSuccessful(msg.sender, usdcReceived);
     }
 
     function withdraw(uint256 amount) external nonReentrant {
@@ -96,6 +115,26 @@ contract Vault is ReentrancyGuard {
 
         IStrategy(strategy).execute(user, amount);
         emit FundsAllocated(user, strategy, amount);
+    }
+
+    function swapUSDYtoUSDC(uint256 amount) external nonReentrant {
+        require(amount > 0, "Amount must be greater than 0");
+        require(usdy.balanceOf(msg.sender) >= amount, "Insufficient USDY balance");
+
+        // Transfer USDY from user to vault
+        usdy.safeTransferFrom(msg.sender, address(this), amount);
+
+        // Approve MockSwap to spend USDY
+        usdy.safeApprove(mockSwap, amount);
+
+        // Perform swap through MockSwap
+        uint256 usdcReceived = IMockSwap(mockSwap).swapUSDYtoUSDC(amount);
+
+        // Update user deposits and TVL
+        userDeposits[msg.sender] += usdcReceived;
+        totalValueLocked += usdcReceived;
+
+        emit DepositSuccessful(msg.sender, usdcReceived);
     }
 
     /// GETTERS ///
