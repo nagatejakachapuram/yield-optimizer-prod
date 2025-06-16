@@ -1,0 +1,28 @@
+# USING MANUAL GAS-LIMIT TO DEPLOY
+### COMMANDs
+
+### DeployAllContracts.s.sol running this script will deploy all contracts
+
+forge script script/DeployAllContracts.s.sol:DeployAllContracts \
+  --rpc-url $SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --legacy \
+  --gas-price 50000000000 \
+  --gas-limit 10000000 \
+  --slow
+
+
+### Another way of Deploying: TestVaultInteraction.s.sol
+-> Also Deploys all contracts
+-> Interacts with the contracts unlike DeployAllContracts.s.sol
+
+forge script script/TestVaultInteraction.s.sol:TestVaultInteraction \
+  --rpc-url $SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --slow \
+  --legacy \
+  --gas-price 50000000000 \
+  --gas-limit 15000000 \
+  -vvvv # Highly recommended for detailed tracing and logs

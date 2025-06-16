@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
 import "../src/mocks/MockSwap.sol";
@@ -92,7 +92,7 @@ contract MockSwapTest is Test {
     }
 
     function test_RevertWhen_SwapWithInsufficientUSDY() public {
-        uint256 usdyAmount = 1_000_000 * 10**18; // More than user has
+        uint256 usdyAmount = 1_000_000 * 10**18; 
         vm.startPrank(user);
         usdy.approve(address(swap), usdyAmount);
         vm.expectRevert("ERC20: transfer amount exceeds balance");

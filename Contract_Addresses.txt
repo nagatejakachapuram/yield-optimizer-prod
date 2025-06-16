@@ -1,0 +1,10 @@
+### Contract Addresses
+
+vault: contract Vault 0x7ABDaAC380a9d930D8C2b126e0A03294f267455c
+strategyManager: contract StrategyManager 0x7532ca1F38109B411Ce5bd1D6Eecf1386Dfa27c5
+usdc: contract MockUSDC 0xEB3526161Ac9BfFB139B94a91E7D79B9915E2FE8
+usdy: contract MockUSDY 0x9e5D60Ae283e15e81D92499DcD3d7967a3f7A6D9
+mockSwap: contract MockSwap 0x35188D5f45Ec730d3Ec0Fe5C96Ee80cb73d618D6
+mockPriceFeed: contract MockPriceFeed 0xC5eaED4bF57EedB0D2fF49C481EcEEC59Bb9F2c6
+lowRiskStrategy: contract MockStrategy 0x4248d8d1a47d7dF637742f22cB789e942143F8BB
+highRiskStrategy: contract MockStrategy 0x0108b9bc01D9e372f01Db5454eeC5423B72f1833

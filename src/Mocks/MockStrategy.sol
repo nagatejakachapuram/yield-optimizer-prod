@@ -3,10 +3,13 @@ pragma solidity ^0.8.28;
 
 import "../Interfaces/IStrategy.sol";
 
-contract LowRiskStrategy is IStrategy {
-    event StrategyExecuted(address user, uint256 amount);
+contract MockStrategy is IStrategy {
+    address public immutable mockUSDC;
+
+    constructor(address _mockUSDC) {
+        mockUSDC = _mockUSDC;
+    }
 
     function execute(address user, uint256 amount) external override {
-        emit StrategyExecuted(user, amount); // For debugging
     }
-}
+} 
