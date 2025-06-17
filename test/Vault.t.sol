@@ -49,6 +49,8 @@ contract VaultTest is Test {
             MockPriceFeed _mockPriceFeed,
             MockStrategy _lowRiskStrategy,
             MockStrategy _highRiskStrategy
+
+            
         ) = script.run();
 
         vault = _vault;

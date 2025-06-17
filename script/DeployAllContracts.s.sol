@@ -25,6 +25,7 @@ contract DeployAllContracts is Script {
         )
     {
         address deployer = msg.sender;
+        address chainlink_Admin = deployer;
         vm.startBroadcast(deployer);
         // 1. Deploy Mock Tokens
         usdc = new MockUSDC();
@@ -54,7 +55,8 @@ contract DeployAllContracts is Script {
             address(usdc),
             address(usdy),
             address(mockSwap),
-            deployer
+            deployer,
+            chainlink_Admin
         );
 
         // 6. Deploy StrategyManager

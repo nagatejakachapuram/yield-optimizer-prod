@@ -17,6 +17,7 @@ contract Vault is ReentrancyGuard, Pausable {
     IERC20 public immutable usdc;
     IERC20 public immutable usdy;
     address public admin;
+    address public chainlink_Admin;
     address public pendingAdmin;
     address public immutable mockSwap;
 
@@ -43,18 +44,21 @@ contract Vault is ReentrancyGuard, Pausable {
         address _usdcAddress,
         address _usdyAddress,
         address _mockSwap,
-        address _admin
+        address _admin,
+        address _chainlink_Admin
     ) {
         // Input validation
         require(_usdcAddress != address(0), "Invalid USDC address");
         require(_usdyAddress != address(0), "Invalid USDY address");
         require(_mockSwap != address(0), "Invalid MockSwap address");
         require(_admin != address(0), "Invalid admin address");
+        require(_chainlink_Admin != address(0), "Invalid Chainlink Admin address");
 
         usdc = IERC20(_usdcAddress);
         usdy = IERC20(_usdyAddress);
         mockSwap = _mockSwap;
         admin = _admin;
+        chainlink_Admin = _chainlink_Admin;
     }
 
     // Custom error for access control
@@ -62,6 +66,12 @@ contract Vault is ReentrancyGuard, Pausable {
     // Modifier to restrict functions to only the admin
     modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
+        _;
+    }
+
+    error NotChainlinkAdmin();
+    modifier onlyChainlinkAdmin() {
+        if (msg.sender != chainlink_Admin) revert NotChainlinkAdmin();
         _;
     }
 
@@ -94,7 +104,7 @@ contract Vault is ReentrancyGuard, Pausable {
      * @notice Pauses the contract, preventing most operations.
      * @dev Only the admin can call this.
      */
-    function pause() external onlyAdmin whenNotPaused {
+    function pause() external onlyAdmin  {
         _pause(); // Internal OpenZeppelin Pausable function
     }
 
@@ -102,7 +112,7 @@ contract Vault is ReentrancyGuard, Pausable {
      * @notice Unpauses the contract, allowing operations to resume.
      * @dev Only the admin can call this.
      */
-    function unpause() external onlyAdmin whenPaused {
+    function unpause() external onlyAdmin  {
         _unpause(); // Internal OpenZeppelin Pausable function
     }
 
@@ -173,7 +183,7 @@ contract Vault is ReentrancyGuard, Pausable {
         address user,
         uint256 amount,
         address strategy
-    ) external onlyAdmin nonReentrant whenNotPaused {
+    ) external  onlyChainlinkAdmin nonReentrant whenNotPaused {
         require(amount > 0, "Allocation amount must be greater than zero");
         require(userDeposits[user] >= amount, "Insufficient balance");
         require(approvedStrategies[strategy], "Strategy not approved");
