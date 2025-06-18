@@ -3,15 +3,15 @@ pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
 import "forge-std/Vm.sol";
-import {Vault} from "../../src/Testing - Phase/Main Contracts/Vault_Mock.sol";
-import {StrategyManager} from "../../src/Testing - Phase/Main Contracts/Strategy_Manager.sol";
-import "../../src/Testing - Phase/Mocks/MockSwap.sol";
-import "../../src/Testing - Phase/Mocks/MockUSDY.sol";
-import "../../src/Testing - Phase/Mocks/MockSwap.sol";
-import "../../src/Testing - Phase/Mocks/MockUSDC.sol";
-import "../../src/Testing - Phase/Mocks/MockStrategy.sol";
-import {MockPriceFeed} from "../../src/Testing - Phase/Mocks/MockPriceFeed.sol";
-import {DeployAllContracts} from "../../script/Testing - Phase /DeployAllContracts.s.sol";
+import {Vault} from "../../src/Testing_Phase/Main Contracts/Vault_Mock.sol";
+import {StrategyManager} from "../../src/Testing_Phase/Main Contracts/Strategy_Manager.sol";
+import "../../src/Testing_Phase/Mocks/MockSwap.sol";
+import "../../src/Testing_Phase/Mocks/MockUSDY.sol";
+import "../../src/Testing_Phase/Mocks/MockSwap.sol";
+import "../../src/Testing_Phase/Mocks/MockUSDC.sol";
+import "../../src/Testing_Phase/Mocks/MockStrategy.sol";
+import {MockPriceFeed} from "../../src/Testing_Phase/Mocks/MockPriceFeed.sol";
+import {DeployAllContracts} from "../../script/Testing_Phase/DeployAllContracts.s.sol";
 
 contract VaultTest is Test {
     Vault public vault;

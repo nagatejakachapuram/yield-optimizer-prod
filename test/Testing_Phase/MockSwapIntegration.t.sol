@@ -2,8 +2,8 @@
 pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
-import "../../src/Testing - Phase/Mocks/MockSwap.sol";
-import "../../src/Testing - Phase/Mocks/MockUSDY.sol";
+import "../../src/Testing_Phase/Mocks/MockSwap.sol";
+import "../../src/Testing_Phase/Mocks/MockUSDY.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../../src/Interfaces/AggregatorV3Interface.sol";
 

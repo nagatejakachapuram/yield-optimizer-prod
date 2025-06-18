@@ -3,7 +3,7 @@
 
 ### DeployAllContracts.s.sol running this script will deploy all contracts
 
-forge script script/DeployAllContracts.s.sol:DeployAllContracts \
+ forge script script/Testing_Phase/DeployAllContracts.s.sol:DeployAllContracts \
   --rpc-url $SEPOLIA_RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast \
@@ -13,11 +13,15 @@ forge script script/DeployAllContracts.s.sol:DeployAllContracts \
   --slow
 
 
+
+
+
+
 ### Another way of Deploying: TestVaultInteraction.s.sol
 -> Also Deploys all contracts
 -> Interacts with the contracts unlike DeployAllContracts.s.sol
 
-forge script script/TestVaultInteraction.s.sol:TestVaultInteraction \
+forge script script/Testing_Phase/TestVaultInteraction.s.sol:TestVaultInteraction \
   --rpc-url $SEPOLIA_RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast \
@@ -26,3 +30,18 @@ forge script script/TestVaultInteraction.s.sol:TestVaultInteraction \
   --gas-price 50000000000 \
   --gas-limit 15000000 \
   -vvvv # Highly recommended for detailed tracing and logs
+
+
+  ### PRODUCTION DEPLOYING SCRIPT COMMANDs
+
+ forge script script/Production/DeployProductionVault.s.sol:DeployProductionVault \
+  --rpc-url $SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --legacy \
+  --gas-price 50000000000 \
+  --gas-limit 10000000 \
+  --slow
+
+
+
