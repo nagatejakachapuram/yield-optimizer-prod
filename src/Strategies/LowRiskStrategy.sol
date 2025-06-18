@@ -22,11 +22,12 @@ contract LowRiskStrategy is IStrategy, Ownable {
     }
 
     function execute(address user, uint256 amount) external override {
+        require(user == msg.sender, "Only user can execute");
         require(activePool != address(0), "No active pool set");
 
-        // Funds are already here from Vault
-        IERC20(USDC).approve(activePool, amount);
+        require(IERC20(usdc).transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        require(IERC20(usdc).approve(activePool, amount), "Approve failed");
 
-        IStrategy(activePool).execute(user, amount);
+        IStrategy(activePool).execute(msg.sender, amount);
     }
 }
