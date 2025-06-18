@@ -1,4 +1,4 @@
-### Contract Addresses
+### MOCK TESTING- Contract Addresses
 
 vault: contract Vault 0x7ABDaAC380a9d930D8C2b126e0A03294f267455c
 strategyManager: contract StrategyManager 0x7532ca1F38109B411Ce5bd1D6Eecf1386Dfa27c5
@@ -8,3 +8,21 @@ mockSwap: contract MockSwap 0x35188D5f45Ec730d3Ec0Fe5C96Ee80cb73d618D6
 mockPriceFeed: contract MockPriceFeed 0xC5eaED4bF57EedB0D2fF49C481EcEEC59Bb9F2c6
 lowRiskStrategy: contract MockStrategy 0x4248d8d1a47d7dF637742f22cB789e942143F8BB
 highRiskStrategy: contract MockStrategy 0x0108b9bc01D9e372f01Db5454eeC5423B72f1833
+
+### SEPOLIA TESTING- Contract Addresses
+  Deployed Contracts:
+    Vault Address:            0xa2e42F3f4c121b73b3ceb7Cb1bF8AD3a514a90d4
+    StrategyManager Address:  0x4047CD9d71c36b5676681D301F09f56d97571150
+    LowRiskStrategyRouter:    0xc64F4791D0d7c9ce47A11D6542f721e673064a48
+    HighRiskStrategyRouter:   0xf928c4f0192154913D700a296330E159e86584D3
+    AaveStrategy (Concrete):  0xD73680de950b2a2aE94EeB2eb38e850C3994E6D5
+    PendleStrategy (Concrete): 0xDEB6a5BAfc821E6ef141B3bb5A89704C7812ad67
+  
+External Sepolia Testnet Dependencies Used:
+    USDC Address (Sepolia):   0x1c7D4B196cb0c7b01D743928b76Bbc59EBa05B0F
+    Aave Pool Address:        0xC13E21b648a5ee794902342038Ff3aaB8f6f8C7b
+    Pendle Router Address:    0x87d6052b7e4e1a61d4c6e3d0b0c0E3C0F9F3e4E4
+  
+Admin/Automation Roles:
+    Deployer/Admin Address:   0x05e62059FEDa53EA732889602D0F777Af1a66386
+    Chainlink Automation Admin: 0x05e62059FEDa53EA732889602D0F777Af1a66386
