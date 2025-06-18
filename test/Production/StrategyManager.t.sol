@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28; 
 import "forge-std/Test.sol";
 import "forge-std/Vm.sol"; 
-import "../src/Contracts/StrategyManager.sol"; 
+import "../../src/Contracts/StrategyManager.sol"; 
 
 
 contract MockStrategy is IStrategy {

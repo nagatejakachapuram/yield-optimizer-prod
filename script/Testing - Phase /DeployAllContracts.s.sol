@@ -2,13 +2,13 @@
 pragma solidity ^0.8.28;
 
 import "forge-std/Script.sol";
-import "../src/Contracts/Vault.sol";
-import "../src/Contracts/StrategyManager.sol";
-import "../src/mocks/MockUSDC.sol";
-import "../src/mocks/MockUSDY.sol";
-import "../src/mocks/MockPriceFeed.sol";
-import "../src/mocks/MockSwap.sol";
-import "../src/mocks/MockStrategy.sol";
+import "../../src/Testing - Phase/Main Contracts/Vault_Mock.sol";
+import "../../src/Testing - Phase/Main Contracts/Strategy_Manager.sol";
+import "../../src/Testing - Phase/Mocks/MockUSDC.sol";
+import "../../src/Testing - Phase/Mocks/MockUSDY.sol";
+import "../../src/Testing - Phase/Mocks/MockPriceFeed.sol";
+import "../../src/Testing - Phase/Mocks/MockSwap.sol";
+import "../../src/Testing - Phase/Mocks/MockStrategy.sol";
 
 contract DeployAllContracts is Script {
     function run()
@@ -25,7 +25,6 @@ contract DeployAllContracts is Script {
         )
     {
         address deployer = msg.sender;
-        address chainlink_Admin = deployer;
         vm.startBroadcast(deployer);
         // 1. Deploy Mock Tokens
         usdc = new MockUSDC();
@@ -55,8 +54,7 @@ contract DeployAllContracts is Script {
             address(usdc),
             address(usdy),
             address(mockSwap),
-            deployer,
-            chainlink_Admin
+            deployer
         );
 
         // 6. Deploy StrategyManager

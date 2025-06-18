@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "forge-std/Test.sol"; 
-import "forge-std/Vm.sol"; 
-import {Vault} from "../src/Contracts/Vault.sol";
-import {StrategyManager} from "../src/Contracts/StrategyManager.sol";
-import {MockUSDC} from "../src/mocks/MockUSDC.sol";
-import {MockUSDY} from "../src/mocks/MockUSDY.sol";
-import {MockSwap} from "../src/mocks/MockSwap.sol";
-import {MockStrategy} from "../src/mocks/MockStrategy.sol";
-import {MockPriceFeed} from "../src/mocks/MockPriceFeed.sol";
-import {DeployAllContracts} from "../script/DeployAllContracts.s.sol";
+import "forge-std/Test.sol";
+import "forge-std/Vm.sol";
+import {Vault} from "../../src/Testing - Phase/Main Contracts/Vault_Mock.sol";
+import {StrategyManager} from "../../src/Testing - Phase/Main Contracts/Strategy_Manager.sol";
+import "../../src/Testing - Phase/Mocks/MockSwap.sol";
+import "../../src/Testing - Phase/Mocks/MockUSDY.sol";
+import "../../src/Testing - Phase/Mocks/MockSwap.sol";
+import "../../src/Testing - Phase/Mocks/MockUSDC.sol";
+import "../../src/Testing - Phase/Mocks/MockStrategy.sol";
+import {MockPriceFeed} from "../../src/Testing - Phase/Mocks/MockPriceFeed.sol";
+import {DeployAllContracts} from "../../script/Testing - Phase /DeployAllContracts.s.sol";
 
 contract VaultTest is Test {
-    
     Vault public vault;
     StrategyManager public strategyManager;
     MockUSDC public usdc;
@@ -24,16 +24,16 @@ contract VaultTest is Test {
     MockPriceFeed public mockPriceFeed;
 
     // Test accounts
-    address public deployer; 
+    address public deployer;
     address public user1;
     address public user2;
-    address public alice; 
-    address public bob; 
-    address public stranger; 
-    address public newAdminCandidate; 
+    address public alice;
+    address public bob;
+    address public stranger;
+    address public newAdminCandidate;
 
     function setUp() public {
-        deployer = address(this); 
+        deployer = address(this);
         alice = vm.addr(4);
         bob = vm.addr(5);
         user1 = vm.addr(2);
@@ -49,8 +49,6 @@ contract VaultTest is Test {
             MockPriceFeed _mockPriceFeed,
             MockStrategy _lowRiskStrategy,
             MockStrategy _highRiskStrategy
-
-            
         ) = script.run();
 
         vault = _vault;
@@ -175,7 +173,7 @@ contract VaultTest is Test {
         uint256 depositAmount = 1000 * 10 ** 6;
         uint256 withdrawAmount = 500 * 10 ** 6;
 
-        usdc.mint(alice, 10_000 * 10 ** 6); 
+        usdc.mint(alice, 10_000 * 10 ** 6);
 
         vm.startPrank(alice);
         usdc.approve(address(vault), depositAmount);
@@ -209,7 +207,6 @@ contract VaultTest is Test {
     function test_WithdrawUSDC_FullAmount() public {
         uint256 depositAmount = 1000 * 10 ** 6;
 
-        
         usdc.mint(alice, 10_000 * 10 ** 6);
 
         vm.startPrank(alice);
@@ -245,7 +242,6 @@ contract VaultTest is Test {
         uint256 depositAmount = 500 * 10 ** 6;
         uint256 withdrawAmount = 1000 * 10 ** 6;
 
-     
         usdc.mint(alice, 10_000 * 10 ** 6);
 
         vm.startPrank(alice);
@@ -288,8 +284,12 @@ contract VaultTest is Test {
 
     function test_AllocateFunds_ToUserPreferredStrategy() public {
         uint256 depositAmount = 1000 * 10 ** 6;
-
+        // Set up Chainlink admin before calling allocateFunds
+        address chainlinkAdmin = vm.addr(123); 
         usdc.mint(alice, depositAmount);
+        vm.prank(deployer);
+        vault.setChainlinkAdmin(chainlinkAdmin);
+        
 
         vm.startPrank(alice);
         usdc.approve(address(vault), depositAmount);
@@ -300,7 +300,7 @@ contract VaultTest is Test {
         vm.prank(deployer);
         vault.setApprovedStrategy(address(highRiskStrategy), true);
 
-        vm.startPrank(deployer);
+        vm.startPrank(chainlinkAdmin);
         uint256 vaultUSDCBefore = usdc.balanceOf(address(vault));
         uint256 highRiskStrategyUSDCBefore = usdc.balanceOf(
             address(highRiskStrategy)
@@ -334,22 +334,26 @@ contract VaultTest is Test {
     }
 
     function test_AllocateFunds_InvalidStrategyReverts() public {
-        uint256 depositAmount = 1000 * 10 ** 6;
+    uint256 depositAmount = 1000 * 10 ** 6;
 
-  
-        usdc.mint(alice, depositAmount);
+    address chainlinkAdmin = vm.addr(123);
+    usdc.mint(alice, depositAmount);
 
-        vm.startPrank(alice);
-        usdc.approve(address(vault), depositAmount);
-        vault.deposit(depositAmount);
-        vm.stopPrank();
+    vm.prank(alice);
+    usdc.approve(address(vault), depositAmount);
 
-        // Simulate AI Agent trying to allocate to an unapproved strategy
-        vm.startPrank(deployer);
-        vm.expectRevert("Strategy not approved"); 
-        vault.allocateFunds(alice, depositAmount, address(stranger));
-        vm.stopPrank();
-    }
+    vm.prank(alice);
+    vault.deposit(depositAmount);
+
+    vm.prank(deployer);
+    vault.setChainlinkAdmin(chainlinkAdmin);
+
+    vm.startPrank(chainlinkAdmin);
+    vm.expectRevert("Strategy not approved");
+    vault.allocateFunds(alice, depositAmount, address(stranger));
+    vm.stopPrank();
+}
+
 
     // --- Swap Functionality Tests ---
     function test_SwapUSDYtoUSDC() public {
@@ -372,7 +376,7 @@ contract VaultTest is Test {
             aliceUSDYBefore - usdyAmount,
             "Alice's USDY should decrease"
         );
-    
+
         assertEq(
             usdc.balanceOf(alice),
             aliceUSDCBefore,
@@ -416,7 +420,7 @@ contract VaultTest is Test {
 
         vm.startPrank(alice);
         usdc.approve(address(vault), 1_000 * 10 ** 6);
-        vault.deposit(1_000 * 10 ** 6); 
+        vault.deposit(1_000 * 10 ** 6);
         vm.stopPrank();
     }
 }

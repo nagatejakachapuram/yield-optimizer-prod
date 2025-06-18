@@ -4,13 +4,13 @@ pragma solidity ^0.8.28;
 import "forge-std/Script.sol";
 import "forge-std/Vm.sol";  
 import "forge-std/console.sol"; 
-import {Vault} from "../src/Contracts/Vault.sol";
-import {StrategyManager} from "../src/Contracts/StrategyManager.sol";
-import {MockUSDC} from "../src/mocks/MockUSDC.sol";
-import {MockUSDY} from "../src/mocks/MockUSDY.sol";
-import {MockSwap} from "../src/mocks/MockSwap.sol";
-import {MockStrategy} from "../src/mocks/MockStrategy.sol"; 
-import {MockPriceFeed} from "../src/mocks/MockPriceFeed.sol"; 
+import {Vault} from "../../src/Testing - Phase/Main Contracts/Vault_Mock.sol";
+import {StrategyManager} from "../../src/Testing - Phase/Main Contracts/Strategy_Manager.sol";
+import "../../src/Testing - Phase/Mocks/MockUSDC.sol";
+import "../../src/Testing - Phase/Mocks/MockUSDY.sol";
+import "../../src/Testing - Phase/Mocks/MockPriceFeed.sol";
+import "../../src/Testing - Phase/Mocks/MockSwap.sol";
+import "../../src/Testing - Phase/Mocks/MockStrategy.sol";
 import {DeployAllContracts} from "./DeployAllContracts.s.sol";
 
 

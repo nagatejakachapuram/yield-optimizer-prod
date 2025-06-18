@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
-import "../Interfaces/IStrategy.sol";
+import "../../Interfaces/IStrategy.sol";
+import "../../Interfaces/IMockSwap.sol";
 
 contract Vault is ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
@@ -14,10 +15,11 @@ contract Vault is ReentrancyGuard, Pausable {
     mapping(address => uint256) public userDeposits;
     uint256 public totalValueLocked;
     IERC20 public immutable usdc;
+    IERC20 public immutable usdy;
     address public admin;
     address public chainlink_Admin;
     address public pendingAdmin;
-
+    address public immutable mockSwap;
 
     mapping(address => bool) public approvedStrategies;
 
@@ -40,13 +42,19 @@ contract Vault is ReentrancyGuard, Pausable {
 
     constructor(
         address _usdcAddress,
+        address _usdyAddress,
+        address _mockSwap,
         address _admin
     ) {
         // Input validation
         require(_usdcAddress != address(0), "Invalid USDC address");
+        require(_usdyAddress != address(0), "Invalid USDY address");
+        require(_mockSwap != address(0), "Invalid MockSwap address");
         require(_admin != address(0), "Invalid admin address");
 
         usdc = IERC20(_usdcAddress);
+        usdy = IERC20(_usdyAddress);
+        mockSwap = _mockSwap;
         admin = _admin;
     }
 
@@ -203,8 +211,36 @@ contract Vault is ReentrancyGuard, Pausable {
         IStrategy(strategy).execute(user, amount);
         emit FundsAllocated(user, strategy, amount);
     }
-    
-    /// ADMIN FUNCTIONS ///
+
+    /**
+     * @notice Allows a user (msg.sender) to deposit USDY, which is immediately converted to USDC
+     * via MockSwap, and the resulting USDC is recorded as their deposit.
+     * @dev Funds are transferred from msg.sender's USDY balance to the Vault,
+     * then swapped, and the USDC received is added to userDeposits.
+     * @param amount The amount of USDY to deposit and convert.
+     */
+    function swapUSDYtoUSDC(uint256 amount) external nonReentrant whenNotPaused {
+    require(amount > 0, "Amount must be greater than 0");
+    require(usdy.balanceOf(msg.sender) >= amount, "Insufficient USDY balance");
+
+    usdy.safeTransferFrom(msg.sender, address(this), amount);
+
+    // Pre-calculate expected output for internal accounting
+    uint256 expectedUsdc = amount / 1e12; // e.g. 18 -> 6 decimals
+
+    // Update accounting BEFORE external call
+    userDeposits[msg.sender] += expectedUsdc;
+    totalValueLocked += expectedUsdc;
+
+    // Approve and call external swap
+    usdy.safeApprove(mockSwap, amount);
+    uint256 actualUsdc = IMockSwap(mockSwap).swapUSDYtoUSDC(amount);
+    require(actualUsdc == expectedUsdc, "Unexpected swap output");
+
+    emit DepositSuccessful(msg.sender, expectedUsdc);
+}
+
+
     // --- Emergency Token Recovery Function ---
     /**
      * @notice Allows the admin to recover accidentally sent ERC20 tokens.
@@ -217,6 +253,7 @@ contract Vault is ReentrancyGuard, Pausable {
         uint256 amount
     ) external onlyAdmin {
         require(tokenAddress != usdc, "Cannot recover USDC: main asset");
+        require(tokenAddress != usdy, "Cannot recover USDY: main asset");
         require(amount > 0, "Recovery amount must be greater than zero");
         // Ensure the contract actually has enough of the token to transfer
         require(

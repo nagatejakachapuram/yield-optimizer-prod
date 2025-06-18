@@ -24,7 +24,7 @@ contract LowRiskStrategy is IStrategy, Ownable {
     function execute(address user, uint256 amount) external override {
         require(activePool != address(0), "No active pool set");
 
-        IERC20(USDC).transferFrom(user, address(this), amount);
+        // Funds are already here from Vault
         IERC20(USDC).approve(activePool, amount);
 
         IStrategy(activePool).execute(user, amount);

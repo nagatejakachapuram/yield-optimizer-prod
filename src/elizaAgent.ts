@@ -123,7 +123,7 @@ const MOCK_ERC20_ABI = [
     "function mint(address to, uint256 amount) public",
     "function approve(address spender, uint256 amount) public returns (bool)",
     "function balanceOf(address account) public view returns (uint256)",
-    "function owner() public view returns (address)" // Assuming MockERC20 has an owner function
+    "function owner() public view returns (address)" 
 ];
 
 // Initialize contracts with error handling

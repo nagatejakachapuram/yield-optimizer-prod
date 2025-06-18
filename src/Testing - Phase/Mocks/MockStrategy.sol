@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "../Interfaces/IStrategy.sol";
+import "../../Interfaces/IStrategy.sol";
 
 contract MockStrategy is IStrategy {
     address public immutable mockUSDC;
