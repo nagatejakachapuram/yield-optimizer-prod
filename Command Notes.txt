@@ -15,8 +15,6 @@
 
 
 
-
-
 ### Another way of Deploying: TestVaultInteraction.s.sol
 -> Also Deploys all contracts
 -> Interacts with the contracts unlike DeployAllContracts.s.sol
@@ -34,6 +32,19 @@ forge script script/Testing_Phase/TestVaultInteraction.s.sol:TestVaultInteractio
 
   ### PRODUCTION DEPLOYING SCRIPT COMMANDs
 
+# Read KV results
+low_apr=$(elizaos kv:get strategy:low | jq -r '.selectedPool.apy')
+high_apr=$(elizaos kv:get strategy:high | jq -r '.selectedPool.apy')
+
+# Convert to basis points
+low_bps=$(printf "%.0f" "$(echo "$low_apr * 100" | bc -l)")
+high_bps=$(printf "%.0f" "$(echo "$high_apr * 100" | bc -l)")
+
+# Export env vars for Forge
+export LOW_RISK_APY=$low_bps
+export HIGH_RISK_APY=$high_bps
+
+# Run deployment
  forge script script/Production/DeployProductionVault.s.sol:DeployProductionVault \
   --rpc-url $SEPOLIA_RPC_URL \
   --private-key $PRIVATE_KEY \
@@ -42,6 +53,3 @@ forge script script/Testing_Phase/TestVaultInteraction.s.sol:TestVaultInteractio
   --gas-price 50000000000 \
   --gas-limit 10000000 \
   --slow
-
-
-

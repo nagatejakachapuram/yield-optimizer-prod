@@ -185,7 +185,7 @@ contract Vault is ReentrancyGuard, Pausable {
         userDeposits[user] -= amount;
 
         // Transfer funds directly to the strategy
-        usdc.safeTransfer(strategy, amount);
+        usdc.safeIncreaseAllowance(strategy, amount);
 
         IStrategy(strategy).execute(user, amount);
         emit FundsAllocated(user, strategy, amount);
