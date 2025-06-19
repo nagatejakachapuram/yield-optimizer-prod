@@ -111,7 +111,7 @@ contract VaultTest is Test {
 
     function testRejectEth() public {
         vm.expectRevert();
-        (bool success, ) = address(vault).call{value: 1 ether}("");
+        (bool success,) = address(vault).call{value: 1 ether}("");
         assertTrue(success);
     }
 

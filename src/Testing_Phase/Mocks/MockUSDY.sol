@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MockUSDY is ERC20, Ownable {
-    uint256 public constant INITIAL_SUPPLY = 1_000_000 * 10**18; // 1 million USDY
+    uint256 public constant INITIAL_SUPPLY = 1_000_000 * 10 ** 18; // 1 million USDY
     uint256 public currentYield = 500; // 5.00% APY (stored with 2 decimals)
 
     constructor() ERC20("Mock USDY", "USDY") {
@@ -14,7 +14,7 @@ contract MockUSDY is ERC20, Ownable {
 
     // Mock function to simulate yield changes
     function setCurrentYield(uint256 newYield) external onlyOwner {
-        require(newYield <= 10000, "Yield cannot exceed 100%");
+        require(newYield <= 10_000, "Yield cannot exceed 100%");
         currentYield = newYield;
     }
 

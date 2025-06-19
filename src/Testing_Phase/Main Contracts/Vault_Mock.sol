@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
- pragma solidity ^0.8.28;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -27,25 +27,12 @@ contract Vault is ReentrancyGuard, Pausable {
     event DepositSuccessful(address indexed user, uint256 amount);
     event WithdrawalSuccessful(address indexed user, uint256 amount);
     event StrategyApprovalUpdated(address indexed strategy, bool approved);
-    event FundsAllocated(
-        address indexed user,
-        address indexed strategy,
-        uint256 amount
-    );
+    event FundsAllocated(address indexed user, address indexed strategy, uint256 amount);
     event AdminTransferProposed(address indexed newAdmin);
     event AdminTransferAccepted(address indexed newAdmin);
-    event TokensRecovered(
-        address indexed tokenAddress,
-        address indexed recipient,
-        uint256 amount
-    );
+    event TokensRecovered(address indexed tokenAddress, address indexed recipient, uint256 amount);
 
-    constructor(
-        address _usdcAddress,
-        address _usdyAddress,
-        address _mockSwap,
-        address _admin
-    ) {
+    constructor(address _usdcAddress, address _usdyAddress, address _mockSwap, address _admin) {
         // Input validation
         require(_usdcAddress != address(0), "Invalid USDC address");
         require(_usdyAddress != address(0), "Invalid USDY address");
@@ -61,12 +48,14 @@ contract Vault is ReentrancyGuard, Pausable {
     // Custom error for access control
     error NotAdmin();
     // Modifier to restrict functions to only the admin
+
     modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
         _;
     }
 
     error NotChainlinkAdmin();
+
     modifier onlyChainlinkAdmin() {
         if (msg.sender != chainlink_Admin) revert NotChainlinkAdmin();
         _;
@@ -74,15 +63,14 @@ contract Vault is ReentrancyGuard, Pausable {
 
     // --- Set Chainlink Admin ---
     /**
-     * 
+     *
      * @param _admin The address of the new Chainlink admin.
      * @dev Only the current admin can call this.
      * @notice This function allows the current admin to propose a new Chainlink admin.
      */
-    function setChainlinkAdmin(address _admin) external onlyAdmin{
+    function setChainlinkAdmin(address _admin) external onlyAdmin {
         chainlink_Admin = _admin;
     }
-
 
     // --- Admin Transfer Functions ---
     /**
@@ -113,7 +101,7 @@ contract Vault is ReentrancyGuard, Pausable {
      * @notice Pauses the contract, preventing most operations.
      * @dev Only the admin can call this.
      */
-    function pause() external onlyAdmin  {
+    function pause() external onlyAdmin {
         _pause(); // Internal OpenZeppelin Pausable function
     }
 
@@ -121,7 +109,7 @@ contract Vault is ReentrancyGuard, Pausable {
      * @notice Unpauses the contract, allowing operations to resume.
      * @dev Only the admin can call this.
      */
-    function unpause() external onlyAdmin  {
+    function unpause() external onlyAdmin {
         _unpause(); // Internal OpenZeppelin Pausable function
     }
 
@@ -170,10 +158,7 @@ contract Vault is ReentrancyGuard, Pausable {
      * @param strategy The address of the strategy contract.
      * @param approved Boolean indicating whether the strategy is approved (`true`) or not (`false`).
      */
-    function setApprovedStrategy(
-        address strategy,
-        bool approved
-    ) external onlyAdmin whenNotPaused {
+    function setApprovedStrategy(address strategy, bool approved) external onlyAdmin whenNotPaused {
         require(strategy != address(0), "Invalid strategy address");
 
         approvedStrategies[strategy] = approved;
@@ -188,11 +173,12 @@ contract Vault is ReentrancyGuard, Pausable {
      * @param amount The amount of USDC to allocate.
      * @param strategy The address of the approved strategy contract.
      */
-    function allocateFunds(
-        address user,
-        uint256 amount,
-        address strategy
-    ) external  onlyChainlinkAdmin nonReentrant whenNotPaused {
+    function allocateFunds(address user, uint256 amount, address strategy)
+        external
+        onlyChainlinkAdmin
+        nonReentrant
+        whenNotPaused
+    {
         require(amount > 0, "Allocation amount must be greater than zero");
         require(userDeposits[user] >= amount, "Insufficient balance");
         require(approvedStrategies[strategy], "Strategy not approved");
@@ -220,26 +206,25 @@ contract Vault is ReentrancyGuard, Pausable {
      * @param amount The amount of USDY to deposit and convert.
      */
     function swapUSDYtoUSDC(uint256 amount) external nonReentrant whenNotPaused {
-    require(amount > 0, "Amount must be greater than 0");
-    require(usdy.balanceOf(msg.sender) >= amount, "Insufficient USDY balance");
+        require(amount > 0, "Amount must be greater than 0");
+        require(usdy.balanceOf(msg.sender) >= amount, "Insufficient USDY balance");
 
-    usdy.safeTransferFrom(msg.sender, address(this), amount);
+        usdy.safeTransferFrom(msg.sender, address(this), amount);
 
-    // Pre-calculate expected output for internal accounting
-    uint256 expectedUsdc = amount / 1e12; // e.g. 18 -> 6 decimals
+        // Pre-calculate expected output for internal accounting
+        uint256 expectedUsdc = amount / 1e12; // e.g. 18 -> 6 decimals
 
-    // Update accounting BEFORE external call
-    userDeposits[msg.sender] += expectedUsdc;
-    totalValueLocked += expectedUsdc;
+        // Update accounting BEFORE external call
+        userDeposits[msg.sender] += expectedUsdc;
+        totalValueLocked += expectedUsdc;
 
-    // Approve and call external swap
-    usdy.safeApprove(mockSwap, amount);
-    uint256 actualUsdc = IMockSwap(mockSwap).swapUSDYtoUSDC(amount);
-    require(actualUsdc == expectedUsdc, "Unexpected swap output");
+        // Approve and call external swap
+        usdy.safeApprove(mockSwap, amount);
+        uint256 actualUsdc = IMockSwap(mockSwap).swapUSDYtoUSDC(amount);
+        require(actualUsdc == expectedUsdc, "Unexpected swap output");
 
-    emit DepositSuccessful(msg.sender, expectedUsdc);
-}
-
+        emit DepositSuccessful(msg.sender, expectedUsdc);
+    }
 
     // --- Emergency Token Recovery Function ---
     /**
@@ -248,18 +233,12 @@ contract Vault is ReentrancyGuard, Pausable {
      * @param tokenAddress The address of the ERC20 token to recover.
      * @param amount The amount of the token to recover.
      */
-    function recoverERC20(
-        IERC20 tokenAddress,
-        uint256 amount
-    ) external onlyAdmin {
+    function recoverERC20(IERC20 tokenAddress, uint256 amount) external onlyAdmin {
         require(tokenAddress != usdc, "Cannot recover USDC: main asset");
         require(tokenAddress != usdy, "Cannot recover USDY: main asset");
         require(amount > 0, "Recovery amount must be greater than zero");
         // Ensure the contract actually has enough of the token to transfer
-        require(
-            tokenAddress.balanceOf(address(this)) >= amount,
-            "Insufficient token balance in Vault for recovery"
-        );
+        require(tokenAddress.balanceOf(address(this)) >= amount, "Insufficient token balance in Vault for recovery");
 
         // Transfer the unwanted tokens to the admin
         tokenAddress.safeTransfer(admin, amount);

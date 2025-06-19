@@ -18,30 +18,18 @@ contract Vault is ReentrancyGuard, Pausable {
     address public chainlink_Admin;
     address public pendingAdmin;
 
-
     mapping(address => bool) public approvedStrategies;
 
     /// EVENTS ///
     event DepositSuccessful(address indexed user, uint256 amount);
     event WithdrawalSuccessful(address indexed user, uint256 amount);
     event StrategyApprovalUpdated(address indexed strategy, bool approved);
-    event FundsAllocated(
-        address indexed user,
-        address indexed strategy,
-        uint256 amount
-    );
+    event FundsAllocated(address indexed user, address indexed strategy, uint256 amount);
     event AdminTransferProposed(address indexed newAdmin);
     event AdminTransferAccepted(address indexed newAdmin);
-    event TokensRecovered(
-        address indexed tokenAddress,
-        address indexed recipient,
-        uint256 amount
-    );
+    event TokensRecovered(address indexed tokenAddress, address indexed recipient, uint256 amount);
 
-    constructor(
-        address _usdcAddress,
-        address _admin
-    ) {
+    constructor(address _usdcAddress, address _admin) {
         // Input validation
         require(_usdcAddress != address(0), "Invalid USDC address");
         require(_admin != address(0), "Invalid admin address");
@@ -53,12 +41,14 @@ contract Vault is ReentrancyGuard, Pausable {
     // Custom error for access control
     error NotAdmin();
     // Modifier to restrict functions to only the admin
+
     modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
         _;
     }
 
     error NotChainlinkAdmin();
+
     modifier onlyChainlinkAdmin() {
         if (msg.sender != chainlink_Admin) revert NotChainlinkAdmin();
         _;
@@ -66,15 +56,14 @@ contract Vault is ReentrancyGuard, Pausable {
 
     // --- Set Chainlink Admin ---
     /**
-     * 
+     *
      * @param _admin The address of the new Chainlink admin.
      * @dev Only the current admin can call this.
      * @notice This function allows the current admin to propose a new Chainlink admin.
      */
-    function setChainlinkAdmin(address _admin) external onlyAdmin{
+    function setChainlinkAdmin(address _admin) external onlyAdmin {
         chainlink_Admin = _admin;
     }
-
 
     // --- Admin Transfer Functions ---
     /**
@@ -105,7 +94,7 @@ contract Vault is ReentrancyGuard, Pausable {
      * @notice Pauses the contract, preventing most operations.
      * @dev Only the admin can call this.
      */
-    function pause() external onlyAdmin  {
+    function pause() external onlyAdmin {
         _pause(); // Internal OpenZeppelin Pausable function
     }
 
@@ -113,7 +102,7 @@ contract Vault is ReentrancyGuard, Pausable {
      * @notice Unpauses the contract, allowing operations to resume.
      * @dev Only the admin can call this.
      */
-    function unpause() external onlyAdmin  {
+    function unpause() external onlyAdmin {
         _unpause(); // Internal OpenZeppelin Pausable function
     }
 
@@ -162,10 +151,7 @@ contract Vault is ReentrancyGuard, Pausable {
      * @param strategy The address of the strategy contract.
      * @param approved Boolean indicating whether the strategy is approved (`true`) or not (`false`).
      */
-    function setApprovedStrategy(
-        address strategy,
-        bool approved
-    ) external onlyAdmin whenNotPaused {
+    function setApprovedStrategy(address strategy, bool approved) external onlyAdmin whenNotPaused {
         require(strategy != address(0), "Invalid strategy address");
 
         approvedStrategies[strategy] = approved;
@@ -180,11 +166,12 @@ contract Vault is ReentrancyGuard, Pausable {
      * @param amount The amount of USDC to allocate.
      * @param strategy The address of the approved strategy contract.
      */
-    function allocateFunds(
-        address user,
-        uint256 amount,
-        address strategy
-    ) external  onlyChainlinkAdmin nonReentrant whenNotPaused {
+    function allocateFunds(address user, uint256 amount, address strategy)
+        external
+        onlyChainlinkAdmin
+        nonReentrant
+        whenNotPaused
+    {
         require(amount > 0, "Allocation amount must be greater than zero");
         require(userDeposits[user] >= amount, "Insufficient balance");
         require(approvedStrategies[strategy], "Strategy not approved");
@@ -203,7 +190,7 @@ contract Vault is ReentrancyGuard, Pausable {
         IStrategy(strategy).execute(user, amount);
         emit FundsAllocated(user, strategy, amount);
     }
-    
+
     /// ADMIN FUNCTIONS ///
     // --- Emergency Token Recovery Function ---
     /**
@@ -212,17 +199,11 @@ contract Vault is ReentrancyGuard, Pausable {
      * @param tokenAddress The address of the ERC20 token to recover.
      * @param amount The amount of the token to recover.
      */
-    function recoverERC20(
-        IERC20 tokenAddress,
-        uint256 amount
-    ) external onlyAdmin {
+    function recoverERC20(IERC20 tokenAddress, uint256 amount) external onlyAdmin {
         require(tokenAddress != usdc, "Cannot recover USDC: main asset");
         require(amount > 0, "Recovery amount must be greater than zero");
         // Ensure the contract actually has enough of the token to transfer
-        require(
-            tokenAddress.balanceOf(address(this)) >= amount,
-            "Insufficient token balance in Vault for recovery"
-        );
+        require(tokenAddress.balanceOf(address(this)) >= amount, "Insufficient token balance in Vault for recovery");
 
         // Transfer the unwanted tokens to the admin
         tokenAddress.safeTransfer(admin, amount);

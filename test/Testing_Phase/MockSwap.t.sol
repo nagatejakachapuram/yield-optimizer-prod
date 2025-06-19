@@ -39,7 +39,7 @@ contract MockPriceFeed is AggregatorV3Interface {
 
 contract MockUSDC is ERC20 {
     constructor() ERC20("Mock USDC", "USDC") {
-        _mint(msg.sender, 1_000_000 * 10**6); // 1 million USDC
+        _mint(msg.sender, 1_000_000 * 10 ** 6); // 1 million USDC
     }
 }
 
@@ -55,15 +55,15 @@ contract MockSwapTest is Test {
         usdc = new MockUSDC();
         usdy = new MockUSDY();
         priceFeed = new MockPriceFeed(1e8, 8); // $1.00 price with 8 decimals
-        
+
         // Deploy MockSwap with mocked price feed
         swap = new MockSwap(address(usdc), address(usdy), address(priceFeed));
-        
+
         // Transfer some USDC to the swap contract for testing
-        usdc.transfer(address(swap), 100_000 * 10**6); // 100k USDC
-        
+        usdc.transfer(address(swap), 100_000 * 10 ** 6); // 100k USDC
+
         // Transfer some USDY to the user for testing
-        usdy.transfer(user, 100_000 * 10**18); // 100k USDY
+        usdy.transfer(user, 100_000 * 10 ** 18); // 100k USDY
     }
 
     function test_Constructor() public view {
@@ -77,10 +77,10 @@ contract MockSwapTest is Test {
     }
 
     function test_SwapUSDYtoUSDC() public {
-        uint256 usdyAmount = 1000 * 10**18; // 1000 USDY
+        uint256 usdyAmount = 1000 * 10 ** 18; // 1000 USDY
         uint256 initialUserUSDC = usdc.balanceOf(user);
         uint256 initialUserUSDY = usdy.balanceOf(user);
-        
+
         vm.startPrank(user);
         usdy.approve(address(swap), usdyAmount);
         uint256 usdcReceived = swap.swapUSDYtoUSDC(usdyAmount);
@@ -92,7 +92,7 @@ contract MockSwapTest is Test {
     }
 
     function test_RevertWhen_SwapWithInsufficientUSDY() public {
-        uint256 usdyAmount = 1_000_000 * 10**18; 
+        uint256 usdyAmount = 1_000_000 * 10 ** 18;
         vm.startPrank(user);
         usdy.approve(address(swap), usdyAmount);
         vm.expectRevert("ERC20: transfer amount exceeds balance");
@@ -107,4 +107,4 @@ contract MockSwapTest is Test {
         swap.swapUSDYtoUSDC(0);
         vm.stopPrank();
     }
-} 
+}

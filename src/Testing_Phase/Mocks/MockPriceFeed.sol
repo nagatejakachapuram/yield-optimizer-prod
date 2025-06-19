@@ -4,8 +4,6 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../../Interfaces/AggregatorV3Interface.sol";
 
-
-
 contract MockPriceFeed is AggregatorV3Interface {
     int256 private price;
     uint8 private decimals_;
@@ -35,4 +33,3 @@ contract MockPriceFeed is AggregatorV3Interface {
         return (0, price, 0, block.timestamp, 0);
     }
 }
-

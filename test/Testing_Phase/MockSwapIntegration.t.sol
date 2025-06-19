@@ -39,7 +39,7 @@ contract MockPriceFeed is AggregatorV3Interface {
 
 contract MockUSDC is ERC20 {
     constructor() ERC20("Mock USDC", "USDC") {
-        _mint(msg.sender, 1_000_000 * 10**6); // 1 million USDC
+        _mint(msg.sender, 1_000_000 * 10 ** 6); // 1 million USDC
     }
 }
 
@@ -56,21 +56,21 @@ contract MockSwapIntegrationTest is Test {
         usdc = new MockUSDC();
         usdy = new MockUSDY();
         priceFeed = new MockPriceFeed(1e8, 8); // $1.00 price with 8 decimals
-        
+
         // Deploy MockSwap with mocked price feed
         swap = new MockSwap(address(usdc), address(usdy), address(priceFeed));
-        
+
         // Transfer USDC to the swap contract
-        usdc.transfer(address(swap), 500_000 * 10**6); // 500k USDC
-        
+        usdc.transfer(address(swap), 500_000 * 10 ** 6); // 500k USDC
+
         // Distribute USDY to users
-        usdy.transfer(user1, 50_000 * 10**18); // 50k USDY
-        usdy.transfer(user2, 50_000 * 10**18); // 50k USDY
+        usdy.transfer(user1, 50_000 * 10 ** 18); // 50k USDY
+        usdy.transfer(user2, 50_000 * 10 ** 18); // 50k USDY
     }
 
     function test_MultipleUsersSwap() public {
-        uint256 usdyAmount = 1000 * 10**18; // 1000 USDY
-        
+        uint256 usdyAmount = 1000 * 10 ** 18; // 1000 USDY
+
         // User 1 swaps
         vm.startPrank(user1);
         usdy.approve(address(swap), usdyAmount);
@@ -84,22 +84,22 @@ contract MockSwapIntegrationTest is Test {
         vm.stopPrank();
 
         assertTrue(usdcReceived1 > 0 && usdcReceived2 > 0, "Both users should receive USDC");
-        assertEq(usdy.balanceOf(user1), 49_000 * 10**18, "User 1 USDY balance should decrease");
-        assertEq(usdy.balanceOf(user2), 49_000 * 10**18, "User 2 USDY balance should decrease");
+        assertEq(usdy.balanceOf(user1), 49_000 * 10 ** 18, "User 1 USDY balance should decrease");
+        assertEq(usdy.balanceOf(user2), 49_000 * 10 ** 18, "User 2 USDY balance should decrease");
     }
 
     function test_SwapWithYieldChanges() public {
-        uint256 usdyAmount = 1000 * 10**18;
-        
+        uint256 usdyAmount = 1000 * 10 ** 18;
+
         // First swap
         vm.startPrank(user1);
         usdy.approve(address(swap), usdyAmount);
         uint256 usdcReceived1 = swap.swapUSDYtoUSDC(usdyAmount);
-        
+
         // Change yield
         vm.stopPrank();
         usdy.setCurrentYield(750); // 7.50%
-        
+
         // Second swap
         vm.startPrank(user1);
         usdy.approve(address(swap), usdyAmount);
@@ -117,19 +117,19 @@ contract MockSwapIntegrationTest is Test {
 
         // Drain USDC from swap contract
         usdc.transferFrom(address(swap), owner, usdc.balanceOf(address(swap)));
-        
+
         vm.startPrank(user1);
-        usdy.approve(address(swap), 1000 * 10**18);
+        usdy.approve(address(swap), 1000 * 10 ** 18);
         vm.expectRevert("Insufficient USDC liquidity");
-        swap.swapUSDYtoUSDC(1000 * 10**18);
+        swap.swapUSDYtoUSDC(1000 * 10 ** 18);
         vm.stopPrank();
     }
 
     function test_SwapWithPriceFeed() public {
         uint256 price = swap.getLatestPrice();
         assertTrue(price > 0, "Price feed should return valid price");
-        
-        uint256 usdyAmount = 1000 * 10**18;
+
+        uint256 usdyAmount = 1000 * 10 ** 18;
         vm.startPrank(user1);
         usdy.approve(address(swap), usdyAmount);
         uint256 usdcReceived = swap.swapUSDYtoUSDC(usdyAmount);
@@ -138,4 +138,4 @@ contract MockSwapIntegrationTest is Test {
         // Verify the swap amount is calculated correctly based on price
         assertTrue(usdcReceived > 0, "Should receive USDC based on price feed");
     }
-} 
+}

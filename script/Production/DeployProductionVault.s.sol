@@ -4,10 +4,10 @@ pragma solidity ^0.8.28;
 import "forge-std/Script.sol";
 import "../../src/Contracts/Vault.sol";
 import "../../src/Contracts/StrategyManager.sol";
-import "../../src/Strategies/LowRiskStrategy.sol"; 
-import "../../src/Strategies/HighRiskStrategy.sol"; 
-import "../../src/Strategies/Strategy_Pools/AaveStrategyPool.sol"; 
-import "../../src/Strategies/Strategy_Pools/PendleStrategy.sol"; 
+import "../../src/Strategies/LowRiskStrategy.sol";
+import "../../src/Strategies/HighRiskStrategy.sol";
+import "../../src/Strategies/Strategy_Pools/AaveStrategyPool.sol";
+import "../../src/Strategies/Strategy_Pools/PendleStrategy.sol";
 
 // OpenZeppelin Interfaces for tokens
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -16,13 +16,13 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // These are the official and verified contract addresses for Sepolia.
 
 // Official Testnet USDC (from Circle Faucet: https://faucet.circle.com/)
-address constant USDC_ADDRESS = 0x1c7D4B196cb0c7b01D743928b76Bbc59EBa05B0F; 
+address constant USDC_ADDRESS = 0x1c7D4B196cb0c7b01D743928b76Bbc59EBa05B0F;
 
 // Aave V3 Pool address on Sepolia (official Aave deployment)
-address constant AAVE_POOL_ADDRESS = 0xC13E21b648a5ee794902342038Ff3aaB8f6f8C7b; 
+address constant AAVE_POOL_ADDRESS = 0xC13E21b648a5ee794902342038Ff3aaB8f6f8C7b;
 
 // Pendle Router address on Sepolia (official Pendle deployment)
-address constant PENDLE_ROUTER_ADDRESS = 0x87d6052b7e4e1a61d4c6e3d0b0c0E3C0F9F3e4E4; 
+address constant PENDLE_ROUTER_ADDRESS = 0x87d6052b7e4e1a61d4c6e3d0b0c0E3C0F9F3e4E4;
 
 // Uniswap V2 Router02 on Sepolia (a common DEX router for token swaps)
 // Note: For USDY-USDC swaps, you would need to ensure a USDY token and a
@@ -43,7 +43,6 @@ address constant PENDLE_ROUTER_ADDRESS = 0x87d6052b7e4e1a61d4c6e3d0b0c0E3C0F9F3e
 address constant DEPLOYER_ADMIN_ADDRESS = 0x05e62059FEDa53EA732889602D0F777Af1a66386;
 // This can be the same as DEPLOYER_ADMIN_ADDRESS for a demo.
 address constant CHAINLINK_AUTOMATION_ADMIN_ADDRESS = 0x05e62059FEDa53EA732889602D0F777Af1a66386;
-
 
 contract DeployProductionVault is Script {
     function run()
@@ -92,21 +91,15 @@ contract DeployProductionVault is Script {
         console.log("\n--- Deploying Main Vault Contract ---");
 
         console.log("Deploying Vault...");
-        vault = new Vault(
-            USDC_ADDRESS,
-            DEPLOYER_ADMIN_ADDRESS
-        );
+        vault = new Vault(USDC_ADDRESS, DEPLOYER_ADMIN_ADDRESS);
         console.log("Vault deployed at:", address(vault));
 
         // --- 4. Deploy Strategy Manager ---
         // This contract manages user risk preferences and directs to the router strategies.
         console.log("\n--- Deploying StrategyManager ---");
 
-        strategyManager = new StrategyManager(
-            address(lowRiskStrategyRouter),
-            address(highRiskStrategyRouter),
-            DEPLOYER_ADMIN_ADDRESS
-        );
+        strategyManager =
+            new StrategyManager(address(lowRiskStrategyRouter), address(highRiskStrategyRouter), DEPLOYER_ADMIN_ADDRESS);
         console.log("StrategyManager deployed at:", address(strategyManager));
 
         // --- 5. Post-Deployment Configuration (Admin Calls) ---
@@ -131,7 +124,7 @@ contract DeployProductionVault is Script {
 
         highRiskStrategyRouter.setActivePool(address(pendleStrategy));
         console.log("HighRiskStrategyRouter activePool set to PendleStrategy:", address(pendleStrategy));
-        
+
         // --- 6. Final Steps ---
         console.log("\n--- Real Sepolia Testnet Deployment Complete! ---");
         console.log("----------------------------------------------------\n");

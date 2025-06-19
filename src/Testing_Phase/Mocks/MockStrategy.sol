@@ -10,6 +10,5 @@ contract MockStrategy is IStrategy {
         mockUSDC = _mockUSDC;
     }
 
-    function execute(address user, uint256 amount) external override {
-    }
-} 
+    function execute(address user, uint256 amount) external override {}
+}

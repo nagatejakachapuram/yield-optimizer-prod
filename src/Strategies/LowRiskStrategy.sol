@@ -25,8 +25,8 @@ contract LowRiskStrategy is IStrategy, Ownable {
         require(user == msg.sender, "Only user can execute");
         require(activePool != address(0), "No active pool set");
 
-        require(IERC20(usdc).transferFrom(msg.sender, address(this), amount), "Transfer failed");
-        require(IERC20(usdc).approve(activePool, amount), "Approve failed");
+        require(IERC20(USDC).transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        require(IERC20(USDC).approve(activePool, amount), "Approve failed");
 
         IStrategy(activePool).execute(msg.sender, amount);
     }

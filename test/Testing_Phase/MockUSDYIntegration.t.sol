@@ -39,7 +39,7 @@ contract MockPriceFeed is AggregatorV3Interface {
 
 contract MockUSDC is ERC20 {
     constructor() ERC20("Mock USDC", "USDC") {
-        _mint(msg.sender, 1_000_000 * 10**6); // 1 million USDC
+        _mint(msg.sender, 1_000_000 * 10 ** 6); // 1 million USDC
     }
 }
 
@@ -56,12 +56,12 @@ contract MockUSDYIntegrationTest is Test {
         usdc = new MockUSDC();
         usdy = new MockUSDY();
         priceFeed = new MockPriceFeed(1e8, 8); // $1.00 price with 8 decimals
-        
+
         // Deploy MockSwap with mocked price feed
         swap = new MockSwap(address(usdc), address(usdy), address(priceFeed));
-        
+
         // Transfer USDC to the swap contract
-        usdc.transfer(address(swap), 500_000 * 10**6); // 500k USDC
+        usdc.transfer(address(swap), 500_000 * 10 ** 6); // 500k USDC
     }
 
     function test_YieldChangesAffectSwap() public {
@@ -74,10 +74,10 @@ contract MockUSDYIntegrationTest is Test {
         assertEq(usdy.currentYield(), 750);
 
         // Transfer USDY to user and perform swap
-        usdy.transfer(user1, 1000 * 10**18);
+        usdy.transfer(user1, 1000 * 10 ** 18);
         vm.startPrank(user1);
-        usdy.approve(address(swap), 1000 * 10**18);
-        uint256 usdcReceived = swap.swapUSDYtoUSDC(1000 * 10**18);
+        usdy.approve(address(swap), 1000 * 10 ** 18);
+        uint256 usdcReceived = swap.swapUSDYtoUSDC(1000 * 10 ** 18);
         vm.stopPrank();
 
         assertTrue(usdcReceived > 0, "Swap should succeed with new yield");
@@ -85,7 +85,7 @@ contract MockUSDYIntegrationTest is Test {
 
     function test_MintAndSwap() public {
         // Mint new USDY tokens
-        uint256 mintAmount = 1000 * 10**18;
+        uint256 mintAmount = 1000 * 10 ** 18;
         usdy.mint(user1, mintAmount);
         assertEq(usdy.balanceOf(user1), mintAmount);
 
@@ -101,14 +101,14 @@ contract MockUSDYIntegrationTest is Test {
 
     function test_MultipleYieldChanges() public {
         uint256[] memory yields = new uint256[](3);
-        yields[0] = 500;  // 5%
-        yields[1] = 750;  // 7.5%
+        yields[0] = 500; // 5%
+        yields[1] = 750; // 7.5%
         yields[2] = 1000; // 10%
 
-        for (uint i = 0; i < yields.length; i++) {
+        for (uint256 i = 0; i < yields.length; i++) {
             usdy.setCurrentYield(yields[i]);
             assertEq(usdy.currentYield(), yields[i], "Yield should be updated correctly");
-            
+
             // Verify getCurrentYield returns correct value
             assertEq(usdy.getCurrentYield(), yields[i], "getCurrentYield should match set yield");
         }
@@ -116,22 +116,22 @@ contract MockUSDYIntegrationTest is Test {
 
     function test_YieldChangesWithMultipleUsers() public {
         // Distribute USDY to users
-        usdy.transfer(user1, 1000 * 10**18);
-        usdy.transfer(user2, 1000 * 10**18);
+        usdy.transfer(user1, 1000 * 10 ** 18);
+        usdy.transfer(user2, 1000 * 10 ** 18);
 
         // Change yield and verify both users can still interact
         usdy.setCurrentYield(750);
-        
+
         vm.startPrank(user1);
-        usdy.approve(address(swap), 500 * 10**18);
-        uint256 usdcReceived1 = swap.swapUSDYtoUSDC(500 * 10**18);
+        usdy.approve(address(swap), 500 * 10 ** 18);
+        uint256 usdcReceived1 = swap.swapUSDYtoUSDC(500 * 10 ** 18);
         vm.stopPrank();
 
         vm.startPrank(user2);
-        usdy.approve(address(swap), 500 * 10**18);
-        uint256 usdcReceived2 = swap.swapUSDYtoUSDC(500 * 10**18);
+        usdy.approve(address(swap), 500 * 10 ** 18);
+        uint256 usdcReceived2 = swap.swapUSDYtoUSDC(500 * 10 ** 18);
         vm.stopPrank();
 
         assertTrue(usdcReceived1 > 0 && usdcReceived2 > 0, "Both users should be able to swap");
     }
-} 
+}

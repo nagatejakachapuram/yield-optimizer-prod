@@ -37,11 +37,7 @@ contract DeployAllContracts is Script {
         mockPriceFeed = new MockPriceFeed(1e8, 8);
 
         // 3. Deploy Mock Swap
-        mockSwap = new MockSwap(
-            address(usdc),
-            address(usdy),
-            address(mockPriceFeed)
-        );
+        mockSwap = new MockSwap(address(usdc), address(usdy), address(mockPriceFeed));
 
         usdc.transfer(address(mockSwap), 500_000 * 10 ** 6); // 500k USDC liquidity
 
@@ -50,19 +46,10 @@ contract DeployAllContracts is Script {
         highRiskStrategy = new MockStrategy(address(usdc));
 
         // 5. Deploy Vault
-        vault = new Vault(
-            address(usdc),
-            address(usdy),
-            address(mockSwap),
-            deployer
-        );
+        vault = new Vault(address(usdc), address(usdy), address(mockSwap), deployer);
 
         // 6. Deploy StrategyManager
-        strategyManager = new StrategyManager(
-            address(lowRiskStrategy),
-            address(highRiskStrategy),
-            deployer
-        );
+        strategyManager = new StrategyManager(address(lowRiskStrategy), address(highRiskStrategy), deployer);
 
         // 7. Admin: Approve strategies in Vault
         vault.setApprovedStrategy(address(lowRiskStrategy), true);

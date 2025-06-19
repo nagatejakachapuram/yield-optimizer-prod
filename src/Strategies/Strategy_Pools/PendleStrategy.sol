@@ -5,17 +5,13 @@ import "../../Interfaces/IStrategy.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IPendleRouter {
-    function depositMarket(
-        address market,
-        uint256 amount,
-        address receiver
-    ) external;
+    function depositMarket(address market, uint256 amount, address receiver) external;
 }
 
 contract PendleStrategy is IStrategy {
     address public immutable USDC;
     IPendleRouter public immutable pendleRouter;
-    address public activeMarket; 
+    address public activeMarket;
 
     event ActiveMarketUpdated(address indexed newMarket);
 
