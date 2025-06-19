@@ -31,7 +31,8 @@
     "@elizaos/core": "latest",
     "@elizaos/plugin-sql": "latest",
     "@elizaos/plugin-bootstrap": "latest",
-    "zod": "3.24.2"
+    "zod": "3.24.2",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "tsup": "8.5.0",

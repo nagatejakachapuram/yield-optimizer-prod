@@ -1,6 +1,4 @@
-import {
-  character
-} from "../chunk-DTK57CPH.js";
+import "../chunk-KCJFYBIN.js";
 
 // node_modules/uuid/dist/esm/stringify.js
 var byteToHex = [];
@@ -56,23 +54,23 @@ var StarterTestSuite = class {
       name: "Character configuration test",
       fn: async (runtime) => {
         const requiredFields = ["name", "bio", "plugins", "system", "messageExamples"];
-        const missingFields = requiredFields.filter((field) => !(field in character));
+        const missingFields = requiredFields.filter((field) => !(field in void 0));
         if (missingFields.length > 0) {
           throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
         }
-        if (character.name !== "Eliza") {
-          throw new Error(`Expected character name to be 'Eliza', got '${character.name}'`);
+        if ((void 0).name !== "Eliza") {
+          throw new Error(`Expected character name to be 'Eliza', got '${(void 0).name}'`);
         }
-        if (!Array.isArray(character.plugins)) {
+        if (!Array.isArray((void 0).plugins)) {
           throw new Error("Character plugins should be an array");
         }
-        if (!character.system) {
+        if (!(void 0).system) {
           throw new Error("Character system prompt is required");
         }
-        if (!Array.isArray(character.bio)) {
+        if (!Array.isArray((void 0).bio)) {
           throw new Error("Character bio should be an array");
         }
-        if (!Array.isArray(character.messageExamples)) {
+        if (!Array.isArray((void 0).messageExamples)) {
           throw new Error("Character message examples should be an array");
         }
       }
