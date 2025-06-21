@@ -34,7 +34,6 @@ async function getBestLowRiskPool() {
   const yields = await getDefiLlamaYields();
   return yields.filter(
     (y) => y.project?.toLowerCase().includes("aave") && y.apyBase && y.symbol?.toLowerCase() === "usdc"
-    // ADD THIS LINE for USDC consistency
   ).map((y) => ({
     address: y.pool,
     apy: y.apyBase,
@@ -46,7 +45,6 @@ async function getBestHighRiskPool() {
   const yields = await getDefiLlamaYields();
   return yields.filter(
     (y) => y.project?.toLowerCase().includes("pendle") && y.apyBase && y.symbol?.toLowerCase() === "usdc"
-    // ADD THIS LINE for USDC consistency
   ).map((y) => ({
     address: y.pool,
     apy: y.apyBase,
@@ -54,13 +52,13 @@ async function getBestHighRiskPool() {
     asset: y.symbol
   })).sort((a, b) => b.apy - a.apy)[0] || null;
 }
-async function main(risk = "low") {
+async function runForRisk(risk) {
   try {
     const downtrend = await isDowntrend(USDC_CG_ID);
     const trend = downtrend ? "downtrend" : "uptrend";
     const bestPool = risk === "low" ? await getBestLowRiskPool() : await getBestHighRiskPool();
     if (!bestPool) {
-      console.warn("\u26A0\uFE0F No suitable pool found.");
+      console.warn(`\u26A0\uFE0F No ${risk}-risk pool found.`);
       return;
     }
     const result = {
@@ -70,13 +68,22 @@ async function main(risk = "low") {
       selectedPool: bestPool
     };
     await kv.set(`strategy:${risk}`, JSON.stringify(result));
-    console.log(`\u2705 Stored ${risk} strategy:`, result);
+    console.log(`\u2705 Stored ${risk}-risk strategy:`, result);
   } catch (err) {
-    console.error("\u274C Agent failed:", err);
+    console.error(`\u274C Failed to process ${risk} strategy:`, err);
   }
 }
+async function main() {
+  await runForRisk("low");
+  await runForRisk("high");
+}
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main("low");
+  const INTERVAL_MS = 15 * 60 * 1e3;
+  console.log("\u2699\uFE0F Eliza strategy agent started (15 min interval)");
+  await main();
+  setInterval(() => {
+    main().catch((err) => console.error("Agent error:", err));
+  }, INTERVAL_MS);
 }
 
 // src/index.ts
@@ -89,4 +96,4 @@ async function startApplication() {
   }
 }
 startApplication();
-//# sourceMappingURL=chunk-KCJFYBIN.js.map
+//# sourceMappingURL=chunk-J7RYM7MS.js.map

@@ -54,14 +54,12 @@ async function isDowntrend(assetId: string): Promise<boolean> {
   return current < day7 && current < day25;
 }
 
-// ====== DefiLlama Pool Fetch ======
+// ====== Yield Fetchers ======
 async function getDefiLlamaYields(): Promise<any[]> {
-  // Change the URL to use /pools
   const res = await axios.get(`${DEFILLAMA_API}/pools`);
-  return res.data.data; // This will now return ALL pools
+  return res.data.data;
 }
 
-// ====== Strategy Pickers ======
 async function getBestLowRiskPool(): Promise<PoolInfo | null> {
   const yields = await getDefiLlamaYields();
 
@@ -69,7 +67,7 @@ async function getBestLowRiskPool(): Promise<PoolInfo | null> {
     .filter(y =>
       y.project?.toLowerCase().includes("aave") &&
       y.apyBase &&
-      y.symbol?.toLowerCase() === 'usdc' // ADD THIS LINE for USDC consistency
+      y.symbol?.toLowerCase() === 'usdc'
     )
     .map(y => ({
       address: y.pool,
@@ -87,7 +85,7 @@ async function getBestHighRiskPool(): Promise<PoolInfo | null> {
     .filter(y =>
       y.project?.toLowerCase().includes("pendle") &&
       y.apyBase &&
-      y.symbol?.toLowerCase() === 'usdc' // ADD THIS LINE for USDC consistency
+      y.symbol?.toLowerCase() === 'usdc'
     )
     .map(y => ({
       address: y.pool,
@@ -98,9 +96,8 @@ async function getBestHighRiskPool(): Promise<PoolInfo | null> {
     .sort((a, b) => b.apy - a.apy)[0] || null;
 }
 
-// ... (rest of your code)
-// ====== Main Logic ======
-export async function main(risk: RiskLevel = "low") {
+// ====== Run for a given risk level ======
+async function runForRisk(risk: RiskLevel) {
   try {
     const downtrend = await isDowntrend(USDC_CG_ID);
     const trend: "uptrend" | "downtrend" = downtrend ? "downtrend" : "uptrend";
@@ -109,7 +106,7 @@ export async function main(risk: RiskLevel = "low") {
       risk === "low" ? await getBestLowRiskPool() : await getBestHighRiskPool();
 
     if (!bestPool) {
-      console.warn("⚠️ No suitable pool found.");
+      console.warn(`⚠️ No ${risk}-risk pool found.`);
       return;
     }
 
@@ -121,13 +118,30 @@ export async function main(risk: RiskLevel = "low") {
     };
 
     await kv.set(`strategy:${risk}`, JSON.stringify(result));
-    console.log(`✅ Stored ${risk} strategy:`, result);
+    console.log(`✅ Stored ${risk}-risk strategy:`, result);
   } catch (err) {
-    console.error("❌ Agent failed:", err);
+    console.error(`❌ Failed to process ${risk} strategy:`, err);
   }
 }
 
-// ====== Run if called directly ======
+// ====== Main Runner ======
+export async function main() {
+  await runForRisk("low");
+  await runForRisk("high");
+}
+
+// ====== Run Periodically or Once ======
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main("low"); // Change to "high" if needed
+  // Run every 15 minutes if you want
+  const INTERVAL_MS = 15 * 60 * 1000;
+
+  console.log("⚙️ Eliza strategy agent started (15 min interval)");
+
+  // Initial run
+  await main();
+
+  // Run every 15 mins (only if long-running process like `node agent.js`)
+  setInterval(() => {
+    main().catch(err => console.error("Agent error:", err));
+  }, INTERVAL_MS);
 }

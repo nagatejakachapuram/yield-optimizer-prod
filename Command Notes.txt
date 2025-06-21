@@ -13,24 +13,15 @@
   --slow
 
 
+### CAST COMMANDs
+Approve the High Risk Vault to spend your Sepolia USDC:
 
-
-### Another way of Deploying: TestVaultInteraction.s.sol
--> Also Deploys all contracts
--> Interacts with the contracts unlike DeployAllContracts.s.sol
-
-forge script script/Testing_Phase/TestVaultInteraction.s.sol:TestVaultInteraction \
+Bash
+cast send 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "approve(address,uint256)" 0xb6FF46c3c86fAfd1827Fb6b027591cCBdb54d6ec $(cast max-uint) \
   --rpc-url $SEPOLIA_RPC_URL \
   --private-key $PRIVATE_KEY \
-  --broadcast \
-  --slow \
-  --legacy \
-  --gas-price 50000000000 \
-  --gas-limit 15000000 \
-  -vvvv # Highly recommended for detailed tracing and logs
+  --gas-price 10gwei # Explicitly set gas price
 
-
-  ### PRODUCTION DEPLOYING SCRIPT COMMANDs
 
 # Read KV results
 low_apr=$(elizaos kv:get strategy:low | jq -r '.selectedPool.apy')
@@ -43,13 +34,3 @@ high_bps=$(printf "%.0f" "$(echo "$high_apr * 100" | bc -l)")
 # Export env vars for Forge
 export LOW_RISK_APY=$low_bps
 export HIGH_RISK_APY=$high_bps
-
-# Run deployment
- forge script script/Production/DeployProductionVault.s.sol:DeployProductionVault \
-  --rpc-url $SEPOLIA_RPC_URL \
-  --private-key $PRIVATE_KEY \
-  --broadcast \
-  --legacy \
-  --gas-price 50000000000 \
-  --gas-limit 10000000 \
-  --slow

@@ -9,6 +9,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^4.9.6",
     "axios": "^1.6.2",
     "dotenv": "^16.3.1",
     "ethers": "^6.14.4"

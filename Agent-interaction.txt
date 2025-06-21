@@ -13,3 +13,7 @@
 
 ### Read this JSON from ElizaOS KV using the key strategy:low or strategy:high.
 ### Parse the strategyAddress and call Vault.allocateFunds(user, amount, strategyAddress).
+
+### Agent commands
+ 1. npm run start
+ 2. npm run build
