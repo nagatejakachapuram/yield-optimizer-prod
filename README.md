@@ -47,7 +47,6 @@ Mocks allow local testing and simulation of real DeFi protocols:
 
 * `MockAavePool.sol`: Simulates yield accrual using time-weighted APY.
 * `MockMorpho.sol`: Simulates yield accrual similarly with isolated balance tracking.
-* `MockPT.sol`, `MockYT.sol`: Mock Pendle tokens (Principal/Ownership).
 * `MockPriceFeed.sol`: Simulated Chainlink price feed.
 
 ---
@@ -71,7 +70,7 @@ Mocks allow local testing and simulation of real DeFi protocols:
 ### 3️⃣ **Chainlink Automation Trigger**
 * Chainlink Automation invokes `allocateFunds(user, amount, strategy)` on the `YVault`.
 * The vault checks `msg.sender` has `chainlink_admin` role.
-* Funds are routed to the specified `IStrategy.execute()` method.
+* Funds are routed to the specified `IStrategy.allocate()` method.
 
 ---
 
