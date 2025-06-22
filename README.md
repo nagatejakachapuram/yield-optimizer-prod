@@ -1,78 +1,106 @@
 # AI-Powered Yield Vaults
 
-This repo contains smart contracts and mocks for an AI-powered yield optimizer protocol. Users deposit USDC into vaults, choose a risk preference, and earn yield from selected pools via dynamically managed strategies. Strategy allocation is controlled by an AI agent and Chainlink Automation.
+This repository contains the full stack of smart contracts, strategy interfaces, and mock infrastructure for an AI-powered yield optimization protocol built on top of ERC4626-style Yearn V2 vaults. Users can deposit USDC into vaults, select a risk preference (low or high), and earn yield via dynamically allocated strategies managed off-chain by an AI agent. Strategy selection and execution are triggered on-chain through Chainlink Automation, enabling a modular, intelligent, and secure DeFi yield platform.
 
-## Architecture Overview
+---
 
-### 🔹 YVault (Yearn-style Vault)
+## 🏗 Architecture Overview
 
-* File: `src/Contracts/YVault.sol`
-* Holds user deposits and manages USDC balances.
-* Integrates with a single strategy (low or high risk) approved by the admin.
-* Tracks user shares and total assets.
-* Calls `execute(address user, uint256 amount)` on the strategy.
+### 🔹 `YVault.sol` (Yearn V2-Style Vault)
+* Location: `src/Contracts/YVault.sol`
+* ERC4626-like vault architecture managing USDC deposits.
+* Tracks total assets and user shares.
+* Integrated with a single active strategy, either low or high risk, configurable via `VaultFactory`.
+* Supports `deposit()`, `withdraw()`, and AI-driven `allocateFunds(user, amount, strategy)` function (callable only by `chainlink_admin`).
+* Internal fund routing through strategy interface `IStrategy`.
+* Includes reentrancy protection, admin controls, token recovery, and emergency pause.
 
-### 🔹 VaultFactory
+### 🔹 `VaultFactory.sol`
+* Location: `src/Contracts/VaultFactory.sol`
+* Deploys `YVault` instances dynamically based on risk profiles.
+* Associates each deployed vault with either a low-risk or high-risk strategy at creation.
+* Tracks all deployed vaults.
 
-* File: `src/Contracts/VaultFactory.sol`
-* Deploys vaults dynamically.
-* Used to create separate vaults for low-risk and high-risk strategies.
+### 🔹 Strategy Contracts (Composable Yield Allocators)
 
-### 🔹 Strategies
+All strategies implement the `IStrategy` interface and define custom execution logic for yield generation based on user risk preference.
 
-Strategies implement the `IStrategy` interface and execute deposits into specific yield pools.
+#### ✅ `LowRiskAaveStrategy.sol`
+* Integrates with `MockAavePool.sol`.
+* Targeted for users selecting "Low Risk".
+* USDC is deposited into a mock Aave-style pool.
+* Strategy calculates yield based on a dynamic APY (basis points passed during deployment).
 
-* `LowRiskSAavestrategy.sol`
+#### ✅ `HighRiskMorphoStrategy.sol`
+* Integrates with `MockMorpho.sol` (previously `MockPendleMarket`).
+* Targeted for users selecting "High Risk".
+* USDC is allocated to a mock Morpho-style lending/borrowing pool.
+* Supports real-time APY input during contract instantiation.
 
-  * Deposits into mock Aave-like pool (via `MockAavePool.sol`).
-  * Targets users selecting low risk.
+#### 🧪 `MockStrategy.sol`
+* Simplified strategy for testing vault mechanics.
+* Does not perform real yield generation.
 
-* `HighRiskPendleStrategy.sol`
+### 🔹 Mocks (Simulated Pool Environments)
 
-  * Deposits into mock Pendle pool (via `MockPendleMarket.sol`).
-  * Targets users selecting high risk.
+Mocks allow local testing and simulation of real DeFi protocols:
 
-* `MockStrategy.sol`
+* `MockAavePool.sol`: Simulates yield accrual using time-weighted APY.
+* `MockMorpho.sol`: Simulates yield accrual similarly with isolated balance tracking.
+* `MockPT.sol`, `MockYT.sol`: Mock Pendle tokens (Principal/Ownership).
+* `MockPriceFeed.sol`: Simulated Chainlink price feed.
 
-  * Generic mock used for testing `YVault` integration.
+---
 
-### 🔹 Mocks
+## 🔁 AI + Chainlink Automation Workflow
 
-For testing strategy and pool behavior:
+### 1️⃣ **User Deposit via Frontend**
+* User deposits USDC into `YVault` using frontend interface.
+* Selects either "Low Risk" or "High Risk" strategy.
+* Funds are deposited into the corresponding vault created via `VaultFactory`.
 
-* `MockAavePool.sol`, `MockPendleMarket.sol` — simulate yield pools
-* `MockPT.sol`, `MockYT.sol` — simulate Pendle Principal/Ownership tokens
-* `MockPriceFeed.sol` — simulates Chainlink price feeds
+### 2️⃣ **AI Agent Strategy Selection**
+* An off-chain agent (powered by ElizaOS + AI rules) fetches data from:
+  - CoinGecko
+  - DefiLlama
+  - Aave / Morpho APIs
+  - Historical price trends (7d / 25d)
+* Based on market trend and pool APY, the agent selects the most optimal pool for the user’s selected risk level.
+* Chosen strategy address and metadata (APY, platform, asset) are stored in ElizaOS's `.local-kv-strategy:{risk}.json`.
 
-## AI + Automation Flow
+### 3️⃣ **Chainlink Automation Trigger**
+* Chainlink Automation invokes `allocateFunds(user, amount, strategy)` on the `YVault`.
+* The vault checks `msg.sender` has `chainlink_admin` role.
+* Funds are routed to the specified `IStrategy.execute()` method.
 
-1. **User Deposit**
+---
 
-   * User deposits USDC via the frontend and selects a risk preference (low/high).
-   * Funds are sent to the appropriate vault (`YVault`).
+## 🔒 Security Considerations
 
-2. **AI Agent Analysis**
+* ✅ **Multi-sig Admin Access**
+  - Strategy approval, pausing, and recovery restricted to `admin` role.
 
-   * Off-chain AI agent fetches market and pool data (via CoinGecko, DefiLlama, Aave, Pendle, etc).
-   * Chooses the optimal strategy for the given risk level.
-   * Stores strategy address in ElizaOS KV store.
+* ✅ **Reentrancy Protection**
+  - `nonReentrant` modifiers on key external functions (`deposit`, `withdraw`, `allocateFunds`).
 
-3. **Chainlink Automation**
+* ✅ **Chainlink Admin Role**
+  - Separate `chainlink_admin` for automation triggers.
 
-   * Triggers `allocateFunds(user, amount, strategy)` on `YVault`.
-   * Only callable by a `chainlink_admin` role.
-   * Vault calls the strategy’s `execute()` method with USDC.
+* ✅ **SafeERC20 Transfers**
+  - Secure USDC handling using OpenZeppelin libraries.
 
-## Security
+* 🚨 **Emergency Pause**
+  - Admins can pause the protocol to prevent deposits and withdrawals.
 
-* 🔐 **Multi-sig admin**: All critical functions like strategy approval, pausing, and recovery are gated by multi-sig owner.
-* 📜 **Proof-of-Reserves (PoR)**: Future versions will integrate PoR validation before allocations to off-chain strategies.
-* 🛡 **Reentrancy protection** on vault operations.
-* 🚫 **Pause functionality** for emergency halts.
+* 🔐 **Token Recovery**
+  - Admins can recover non-core tokens mistakenly sent to the vault.
 
-## Interfaces
+* 📊 **Upgradeable Strategy Routing**
+  - Each strategy contract (e.g. `HighRiskMorphoStrategy`) can dynamically switch between pools.
 
-* `IStrategy`: Standardized interface all strategies must implement.
+---
+
+## 🧩 Interfaces
 
 ```solidity
 interface IStrategy {
@@ -80,22 +108,27 @@ interface IStrategy {
 }
 ```
 
-## Deployment (Local Testing)
+---
 
+## 🧪 Local Deployment & Testing
+
+### Prerequisites
+* Foundry (`forge`)
+* Node.js (for frontend AI agent)
+* ElizaOS local KV store
+
+### Run Contracts
 ```bash
 forge build
 forge test
 ```
 
-## Coming Soon
-
-* Chainlink Keeper integration script
-* ElizaOS AI agent logic
-* PoR enforcement module
-* Real mainnet pool adapters (Aave, Pendle, etc.)
+### Run Frontend AI Agent
+```bash
+node agent.js
+```
 
 ---
 
-Maintained by AI Vaults team.
 
-For questions or collaboration, reach out via Telegram or Discord.
+

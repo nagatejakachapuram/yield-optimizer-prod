@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../Interfaces/IStrategy.sol"; // Ensure this path is correct
+import "../../Interfaces/IStrategy.sol"; 
 
 contract MockStrategy is IStrategy {
     using SafeERC20 for IERC20;

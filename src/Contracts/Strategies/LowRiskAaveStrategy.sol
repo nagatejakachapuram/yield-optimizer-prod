@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+/// @notice Minimal Aave Pool interface required for deposits/withdrawals and data fetching
 interface IAavePool {
     function supply(
         address asset,
@@ -35,36 +36,51 @@ interface IAavePool {
         );
 }
 
+/// @title LowRiskAaveStrategy
+/// @notice A low-risk yield strategy that supplies USDC into Aave V3
+/// @dev Complies with IStrategy and is intended to be called only by a vault
 contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
+    /// @notice USDC token contract
     IERC20 public immutable usdc;
+
+    /// @notice Vault address allowed to interact with this strategy
     address public immutable vault;
+
+    /// @notice Aave pool contract for deposits/withdrawals
     IAavePool public immutable aavePool;
 
+    /// @param _usdc The address of the USDC token
+    /// @param _aavePool The address of the Aave V3 pool
+    /// @param _vault The address of the vault using this strategy
     constructor(address _usdc, address _aavePool, address _vault) {
         usdc = IERC20(_usdc);
         aavePool = IAavePool(_aavePool);
         vault = _vault;
     }
 
+    /// @dev Restricts access to only the vault
     modifier onlyVault() {
         require(msg.sender == vault, "Only vault");
         _;
     }
 
+    /// @notice Allocates USDC to Aave by supplying to the lending pool
+    /// @param amount Amount of USDC to supply
+    /// @dev Vault must send USDC to this strategy before calling allocate
     function allocate(
-        address,
+        address, // ignored
         uint256 amount
     ) external override onlyVault nonReentrant {
         aavePool.supply(address(usdc), amount, address(this), 0);
     }
 
+    /// @notice Withdraws USDC from Aave and returns any potential loss
+    /// @param amount Amount requested by the vault to withdraw
+    /// @return loss The difference between requested and received amount (if any)
     function withdraw(
         uint256 amount
     ) external override onlyVault nonReentrant returns (uint256 loss) {
         uint256 before = usdc.balanceOf(address(this));
-
-        // Get the max withdrawable amount (e.g., from balance in aToken or pool view)
-        // Optional: add view to check balance if needed
 
         uint256 withdrawn;
         try aavePool.withdraw(address(usdc), amount, address(this)) returns (
@@ -72,14 +88,14 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
         ) {
             withdrawn = actualWithdrawn;
         } catch {
-            // If withdraw fails entirely, count it as full loss
+            // Entire withdrawal failed, treat full amount as loss
             return amount;
         }
 
         uint256 afterBal = usdc.balanceOf(address(this));
         uint256 received = afterBal - before;
 
-        // Sanity check: received might be less than asked
+        // Calculate any shortfall as loss
         if (received < amount) {
             loss = amount - received;
         } else {
@@ -89,10 +105,14 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
         return loss;
     }
 
+    /// @notice Approves Aave to spend unlimited USDC from this strategy
+    /// @dev Must be called once before `allocate` can succeed
     function approveSpending() public {
         IERC20(usdc).approve(address(aavePool), type(uint256).max);
     }
 
+    /// @notice Estimates total USDC assets currently deposited in Aave
+    /// @return The total collateral value according to Aave (in base units)
     function estimatedTotalAssets() public view override returns (uint256) {
         (uint256 totalCollateral, , , , , ) = aavePool.getUserAccountData(
             address(this)
@@ -100,6 +120,10 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
         return totalCollateral;
     }
 
+    /// @notice Returns strategy performance metrics to the vault
+    /// @return gain Estimated gain (total collateral in Aave)
+    /// @return loss Always 0 for now, as this strategy only tracks gains
+    /// @return debtPayment Always 0 (not used in current design)
     function report()
         external
         view

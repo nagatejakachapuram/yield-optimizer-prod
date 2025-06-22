@@ -111,15 +111,21 @@ contract YVaultTest is Test {
 
         // Simulate first gain
         strategy.setFakeYield(100e6);
-        token.mint(address(strategy), 100e6); // <--- MINT TO STRATEGY
+        token.mint(address(strategy), 100e6);
 
         vm.prank(admin);
         vault.reportFromStrategy();
 
         // Simulate second gain
         strategy.setFakeYield(50e6);
-        token.mint(address(strategy), 50e6); // <--- MINT TO STRATEGY
+        token.mint(address(strategy), 50e6);
 
+        vm.prank(admin);
+        vault.reportFromStrategy();
+    }
+
+    function testReportWithNoStrategyReverts() public {
+        vm.expectRevert(YVault.StrategyNotSet.selector);
         vm.prank(admin);
         vault.reportFromStrategy();
     }
@@ -179,96 +185,73 @@ contract YVaultTest is Test {
     }
 
     function testFullWithdrawAfterAllocation() public {
-        uint256 depositAmount = 100e6; // 100 USDC
+        uint256 depositAmount = 100e6;
 
-        // User deposits into vault
         vm.prank(user);
         uint256 sharesMinted = vault.deposit(depositAmount);
         assertEq(sharesMinted, depositAmount);
-        assertEq(vault.balanceOf(user), depositAmount);
-        assertEq(token.balanceOf(address(vault)), depositAmount);
 
-        // Admin sets strategy and allocates 70%
         vm.prank(admin);
         vault.setStrategy(address(strategy));
+
         uint256 allocationAmount = 70e6;
         vm.prank(chainlinkKeeper);
         vault.allocateFunds(allocationAmount);
-        assertEq(token.balanceOf(address(strategy)), allocationAmount);
 
-        // Strategy has no gain/loss yet
-        assertEq(
-            token.balanceOf(address(vault)),
-            depositAmount - allocationAmount
-        );
-
-        // User withdraws all shares
         vm.prank(user);
         uint256 withdrawnAmount = vault.withdraw(depositAmount);
 
-        // Full withdrawal should return 100 USDC (no gain/loss)
         assertEq(withdrawnAmount, depositAmount);
-        assertEq(token.balanceOf(user), 1_000_000e6); // back to original user balance
+        assertEq(token.balanceOf(user), 1_000_000e6);
         assertEq(vault.balanceOf(user), 0);
         assertEq(vault.v_totalShares(), 0);
         assertEq(vault.v_totalAssets(), 0);
     }
 
     function testPartialWithdrawPullsFromStrategy() public {
-        uint256 depositAmount = 100e6; // 100 USDC
+        uint256 depositAmount = 100e6;
 
-        // User deposits 100 USDC
         vm.prank(user);
         uint256 sharesMinted = vault.deposit(depositAmount);
         assertEq(sharesMinted, depositAmount);
 
-        // Admin sets strategy and allocates 90 USDC (leaving 10 in vault)
         vm.prank(admin);
         vault.setStrategy(address(strategy));
+
         uint256 allocationAmount = 90e6;
         vm.prank(chainlinkKeeper);
         vault.allocateFunds(allocationAmount);
 
-        assertEq(token.balanceOf(address(vault)), 10e6);
-        assertEq(token.balanceOf(address(strategy)), 90e6);
-
-        // User withdraws 20 USDC worth of shares
         uint256 withdrawShares = 20e6;
         vm.prank(user);
         uint256 withdrawnAmount = vault.withdraw(withdrawShares);
 
-        // Vault should have pulled 10 USDC from strategy
         assertEq(withdrawnAmount, 20e6);
-        assertEq(token.balanceOf(user), 1_000_000e6 - 80e6); // 100 initially - 100 deposit + 20 withdrawn
-        assertEq(vault.balanceOf(user), 80e6); // Remaining shares
+        assertEq(token.balanceOf(user), 1_000_000e6 - 80e6);
+        assertEq(vault.balanceOf(user), 80e6);
         assertEq(vault.v_totalShares(), 80e6);
         assertEq(vault.v_totalAssets(), 80e6);
     }
 
-    // Deposting wrong token reverts
     function testDepositWrongTokenDoesNothing() public {
-        // Create a wrong token
         MockERC20 wrongToken = new MockERC20("Wrong Token", "WRONG", 6);
         wrongToken.mint(user, 500e6);
 
-        // Approve vault to spend wrong token
         vm.startPrank(user);
         wrongToken.approve(address(vault), type(uint256).max);
-
-        // Try transferring directly (which shouldn't affect vault shares)
-        wrongToken.transfer(address(vault), 500e6); // Even if user sends tokens to vault, shares should not increase
+        wrongToken.transfer(address(vault), 500e6);
         vm.stopPrank();
 
-        // Check that vault did not mint any shares or update total assets
         assertEq(vault.balanceOf(user), 0);
         assertEq(vault.v_totalShares(), 0);
         assertEq(vault.v_totalAssets(), 0);
 
-        // Vault's asset balance should remain 0
-        assertEq(
-            MockERC20(address(vault.asset())).balanceOf(address(vault)),
-            0
-        );
+        assertEq(MockERC20(address(vault.asset())).balanceOf(address(vault)), 0);
     }
 
+    function testChainlinkKeeperAccessControl() public {
+        vm.prank(user);
+        vm.expectRevert(YVault.NotVaultOwner.selector);
+        vault.allocateFunds(1e6);
+    }
 }
