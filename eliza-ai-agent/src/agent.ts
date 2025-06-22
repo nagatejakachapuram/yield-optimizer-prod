@@ -5,7 +5,7 @@ let kv: { set: (key: string, val: string) => Promise<void> };
 try {
   kv = await import("@elizaos/kv");
 } catch (e) {
-  console.warn("⚠️ Falling back to local KV");
+  console.warn(" Falling back to local KV");
   const fs = await import("fs/promises");
   kv = {
     set: async (key: string, val: string) => {
@@ -72,6 +72,7 @@ async function getBestLowRiskPool(): Promise<PoolInfo | null> {
     .map(y => ({
       address: y.pool,
       apy: y.apyBase,
+      apyBps: Math.round(y.apyBase * 10000),
       platform: "Aave",
       asset: y.symbol,
     }))
@@ -83,18 +84,20 @@ async function getBestHighRiskPool(): Promise<PoolInfo | null> {
 
   return yields
     .filter(y =>
-      y.project?.toLowerCase().includes("pendle") &&
+      y.project?.toLowerCase().includes("morpho") &&
       y.apyBase &&
       y.symbol?.toLowerCase() === 'usdc'
     )
     .map(y => ({
       address: y.pool,
       apy: y.apyBase,
-      platform: "Pendle",
+      apyBps: Math.round(y.apyBase * 10000),
+      platform: "Morpho",
       asset: y.symbol,
     }))
     .sort((a, b) => b.apy - a.apy)[0] || null;
 }
+
 
 // ====== Run for a given risk level ======
 async function runForRisk(risk: RiskLevel) {
@@ -106,7 +109,7 @@ async function runForRisk(risk: RiskLevel) {
       risk === "low" ? await getBestLowRiskPool() : await getBestHighRiskPool();
 
     if (!bestPool) {
-      console.warn(`⚠️ No ${risk}-risk pool found.`);
+      console.warn(` No ${risk}-risk pool found.`);
       return;
     }
 
@@ -118,9 +121,9 @@ async function runForRisk(risk: RiskLevel) {
     };
 
     await kv.set(`strategy:${risk}`, JSON.stringify(result));
-    console.log(`✅ Stored ${risk}-risk strategy:`, result);
+    console.log(` Stored ${risk}-risk strategy:`, result);
   } catch (err) {
-    console.error(`❌ Failed to process ${risk} strategy:`, err);
+    console.error(` Failed to process ${risk} strategy:`, err);
   }
 }
 
@@ -135,7 +138,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // Run every 15 minutes if you want
   const INTERVAL_MS = 15 * 60 * 1000;
 
-  console.log("⚙️ Eliza strategy agent started (15 min interval)");
+  console.log(" Eliza strategy agent started (15 min interval)");
 
   // Initial run
   await main();

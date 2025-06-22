@@ -62,12 +62,34 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
         uint256 amount
     ) external override onlyVault nonReentrant returns (uint256 loss) {
         uint256 before = usdc.balanceOf(address(this));
-        aavePool.withdraw(address(usdc), amount, address(this));
+
+        // Get the max withdrawable amount (e.g., from balance in aToken or pool view)
+        // Optional: add view to check balance if needed
+
+        uint256 withdrawn;
+        try aavePool.withdraw(address(usdc), amount, address(this)) returns (
+            uint256 actualWithdrawn
+        ) {
+            withdrawn = actualWithdrawn;
+        } catch {
+            // If withdraw fails entirely, count it as full loss
+            return amount;
+        }
+
         uint256 afterBal = usdc.balanceOf(address(this));
-        return before + amount > afterBal ? amount - (afterBal - before) : 0;
+        uint256 received = afterBal - before;
+
+        // Sanity check: received might be less than asked
+        if (received < amount) {
+            loss = amount - received;
+        } else {
+            loss = 0;
+        }
+
+        return loss;
     }
 
-    function approveSpending() public  {
+    function approveSpending() public {
         IERC20(usdc).approve(address(aavePool), type(uint256).max);
     }
 

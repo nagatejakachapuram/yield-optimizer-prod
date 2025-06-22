@@ -4,7 +4,7 @@ var kv;
 try {
   kv = await import("@elizaos/kv");
 } catch (e) {
-  console.warn("\u26A0\uFE0F Falling back to local KV");
+  console.warn(" Falling back to local KV");
   const fs = await import("fs/promises");
   kv = {
     set: async (key, val) => {
@@ -37,6 +37,7 @@ async function getBestLowRiskPool() {
   ).map((y) => ({
     address: y.pool,
     apy: y.apyBase,
+    apyBps: Math.round(y.apyBase * 1e4),
     platform: "Aave",
     asset: y.symbol
   })).sort((a, b) => b.apy - a.apy)[0] || null;
@@ -44,11 +45,12 @@ async function getBestLowRiskPool() {
 async function getBestHighRiskPool() {
   const yields = await getDefiLlamaYields();
   return yields.filter(
-    (y) => y.project?.toLowerCase().includes("pendle") && y.apyBase && y.symbol?.toLowerCase() === "usdc"
+    (y) => y.project?.toLowerCase().includes("morpho") && y.apyBase && y.symbol?.toLowerCase() === "usdc"
   ).map((y) => ({
     address: y.pool,
     apy: y.apyBase,
-    platform: "Pendle",
+    apyBps: Math.round(y.apyBase * 1e4),
+    platform: "Morpho",
     asset: y.symbol
   })).sort((a, b) => b.apy - a.apy)[0] || null;
 }
@@ -58,7 +60,7 @@ async function runForRisk(risk) {
     const trend = downtrend ? "downtrend" : "uptrend";
     const bestPool = risk === "low" ? await getBestLowRiskPool() : await getBestHighRiskPool();
     if (!bestPool) {
-      console.warn(`\u26A0\uFE0F No ${risk}-risk pool found.`);
+      console.warn(` No ${risk}-risk pool found.`);
       return;
     }
     const result = {
@@ -68,9 +70,9 @@ async function runForRisk(risk) {
       selectedPool: bestPool
     };
     await kv.set(`strategy:${risk}`, JSON.stringify(result));
-    console.log(`\u2705 Stored ${risk}-risk strategy:`, result);
+    console.log(` Stored ${risk}-risk strategy:`, result);
   } catch (err) {
-    console.error(`\u274C Failed to process ${risk} strategy:`, err);
+    console.error(` Failed to process ${risk} strategy:`, err);
   }
 }
 async function main() {
@@ -79,7 +81,7 @@ async function main() {
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
   const INTERVAL_MS = 15 * 60 * 1e3;
-  console.log("\u2699\uFE0F Eliza strategy agent started (15 min interval)");
+  console.log(" Eliza strategy agent started (15 min interval)");
   await main();
   setInterval(() => {
     main().catch((err) => console.error("Agent error:", err));
@@ -96,4 +98,4 @@ async function startApplication() {
   }
 }
 startApplication();
-//# sourceMappingURL=chunk-J7RYM7MS.js.map
+//# sourceMappingURL=chunk-ZGVQRVTL.js.map
