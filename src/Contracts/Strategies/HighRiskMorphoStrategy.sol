@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+
 /// @title HighRiskMorphoStrategy
 /// @notice A high-risk yield strategy that supplies USDC into a Morpho market
 /// @dev Designed for integration with a vault and the Morpho lending protocol

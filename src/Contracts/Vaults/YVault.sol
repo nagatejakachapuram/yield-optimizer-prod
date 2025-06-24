@@ -6,6 +6,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {IStrategy} from "../../Interfaces/IStrategy.sol";
+import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
+
 
 /// @title YVault - A simplified Yearn-style vault
 /// @author
@@ -153,20 +155,7 @@ contract YVault is ReentrancyGuard, Pausable {
         emit VaultStrategySet(_strategy);
     }
 
-    /// @notice Updates accounting by pulling report from current strategy
-    function reportFromStrategy() external onlyVaultOwner {
-        if (address(currentStrategy) == address(0)) revert StrategyNotSet();
-        (uint256 gain, uint256 loss, ) = currentStrategy.report();
-
-        if (gain > 0) {
-            v_totalAssets += gain;
-        } else if (loss > 0) {
-            v_totalAssets = v_totalAssets > loss ? v_totalAssets - loss : 0;
-        }
-
-        emit VaultStrategyReported(gain, loss, v_totalAssets);
-    }
-
+    
     /// @notice Pauses the vault (stops deposit/withdraw/allocate)
     function pause() external onlyVaultOwner {
         _pause();
@@ -233,18 +222,7 @@ contract YVault is ReentrancyGuard, Pausable {
         emit VaultWithdraw(msg.sender, amount, shares);
     }
 
-    /// @notice Allocates funds from the vault to the active strategy
-    /// @param amount The amount to allocate
-    function allocateFunds(uint256 amount) external onlyKeeper whenNotPaused {
-        if (amount > asset.balanceOf(address(this)))
-            revert InsufficientVaultBalance();
-        if (address(currentStrategy) == address(0)) revert StrategyNotSet();
 
-        asset.safeTransfer(address(currentStrategy), amount);
-        currentStrategy.allocate(address(this), amount);
-
-        emit FundsAllocated(amount);
-    }
 
     // ========== View Functions ==========
 
@@ -316,4 +294,64 @@ contract YVault is ReentrancyGuard, Pausable {
         if (to == address(0)) revert ZeroAddress();
         IERC20(token).safeTransfer(to, amount);
     }
+
+       // ========== Automation Functions ==========
+
+           /// @notice Updates accounting by pulling report from current strategy
+    function reportFromStrategy() internal {
+        if (address(currentStrategy) == address(0)) revert StrategyNotSet();
+        (uint256 gain, uint256 loss, ) = currentStrategy.report();
+
+        if (gain > 0) {
+            v_totalAssets += gain;
+        } else if (loss > 0) {
+            v_totalAssets = v_totalAssets > loss ? v_totalAssets - loss : 0;
+        }
+
+        emit VaultStrategyReported(gain, loss, v_totalAssets);
+    }
+
+        /// @notice Allocates funds from the vault to the active strategy
+    /// @param amount The amount to allocate
+    function allocateFunds(uint256 amount) internal whenNotPaused {
+        if (amount > asset.balanceOf(address(this)))
+            revert InsufficientVaultBalance();
+        if (address(currentStrategy) == address(0)) revert StrategyNotSet();
+
+        asset.safeTransfer(address(currentStrategy), amount);
+        currentStrategy.allocate(address(this), amount);
+
+        emit FundsAllocated(amount);
+    }
+
+    function checkUpkeep(bytes calldata /* checkData */) external view override returns (bool upkeepNeeded, bytes memory performData) {
+        // Automation 1: Allocate idle funds
+        uint256 idleFunds = asset.balanceOf(address(this));
+        bool shouldAllocate = idleFunds > 0 && address(currentStrategy) != address(0);
+        
+        // Automation 2: Report from strategy (e.g., check every 24 hours)
+        // Note: A real implementation might have more complex logic here.
+        // For simplicity, we assume we want to report periodically.
+        // This check can be enhanced to be based on time, profit, or other metrics.
+        bool shouldReport = address(currentStrategy) != address(0);
+
+        upkeepNeeded = shouldAllocate || shouldReport;
+        
+        // Encode which function to call in performUpkeep
+        if (shouldAllocate) {
+            performData = abi.encodeWithSelector(this.allocateFunds.selector, idleFunds);
+        } else if (shouldReport) {
+            performData = abi.encodeWithSelector(this.reportFromStrategy.selector);
+        }
+    }
+
+    function performUpkeep(bytes calldata performData) external override {
+        // We decode the performData to call the correct function
+        (bool success, ) = address(this).call(performData);
+        require(success, "PerformUpkeep failed");
+    }
+
+
+
 }
+    
