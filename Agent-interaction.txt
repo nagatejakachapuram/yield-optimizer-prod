@@ -1,0 +1,19 @@
+###  KV Stored Output (Example)
+ Chainlink Automation reads from this KV key: strategy:low or strategy:high.
+{
+  "strategyAddress": "0xAaveBestPool123...",
+  "platform": "Aave",
+  "apy": 3.91,
+  "asset": "USDC",
+  "risk": "low",
+  "trend": "downtrend",
+  "timestamp": 1721273450000
+}
+
+
+### Read this JSON from ElizaOS KV using the key strategy:low or strategy:high.
+### Parse the strategyAddress and call Vault.allocateFunds(user, amount, strategyAddress).
+
+### Agent commands
+ 1. npm run start
+ 2. npm run build

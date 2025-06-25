@@ -1,0 +1,36 @@
+# USING MANUAL GAS-LIMIT TO DEPLOY
+### COMMANDs
+
+### DeployAllContracts.s.sol running this script will deploy all contracts
+
+ forge script script/Testing_Phase/DeployAllContracts.s.sol:DeployAllContracts \
+  --rpc-url $SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --legacy \
+  --gas-price 50000000000 \
+  --gas-limit 10000000 \
+  --slow
+
+
+### CAST COMMANDs
+Approve the High Risk Vault to spend your Sepolia USDC:
+
+Bash
+cast send 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "approve(address,uint256)" 0xb6FF46c3c86fAfd1827Fb6b027591cCBdb54d6ec $(cast max-uint) \
+  --rpc-url $SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --gas-price 10gwei # Explicitly set gas price
+
+
+# Read KV results
+low_apr=$(elizaos kv:get strategy:low | jq -r '.selectedPool.apy')
+high_apr=$(elizaos kv:get strategy:high | jq -r '.selectedPool.apy')
+
+# Convert to basis points
+low_bps=$(printf "%.0f" "$(echo "$low_apr * 100" | bc -l)")
+high_bps=$(printf "%.0f" "$(echo "$high_apr * 100" | bc -l)")
+
+# Export env vars for Forge
+export LOW_RISK_APY=$low_bps
+export HIGH_RISK_APY=$high_bps

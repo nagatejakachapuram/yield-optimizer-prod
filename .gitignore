@@ -1,0 +1,21 @@
+# Foundry
+cache/
+out/
+broadcast/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.*
+
+# Node
+node_modules/
+package-lock.json
+
+# Misc
+.DS_Store 
+
+site/
