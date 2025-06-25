@@ -29,20 +29,22 @@
   "dependencies": {
     "@elizaos/cli": "latest",
     "@elizaos/core": "latest",
-    "@elizaos/plugin-sql": "latest",
-    "@elizaos/plugin-bootstrap": "latest",
-    "zod": "3.24.2",
-    "axios": "^1.6.0"
+    "@elizaos/plugin-bootstrap": "^1.0.12",
+    "@elizaos/plugin-local-ai": "^1.0.4",
+    "@elizaos/plugin-sql": "^1.0.12",
+    "axios": "^1.6.0",
+    "zod": "3.24.2"
   },
   "devDependencies": {
-    "tsup": "8.5.0",
+    "@vitest/coverage-v8": "3.1.4",
+    "dotenv-cli": "^8.0.0",
     "prettier": "3.5.3",
-    "vitest": "3.1.4",
-    "@vitest/coverage-v8": "3.1.4"
+    "tsup": "8.5.0",
+    "vitest": "3.1.4"
   },
   "scripts": {
     "start": "elizaos start",
-    "dev": "elizaos dev",
+    "dev": "npm_config_yes=true npx dotenv-cli -- elizaos dev --character characters/yield-optimizer-char.json",
     "build": "tsup",
     "lint": "prettier --write ./src",
     "test:component": "vitest run",

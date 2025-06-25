@@ -1,15 +1,29 @@
+// agent.ts
 // ====== Imports ======
 // @ts-ignore: Will be available only in ElizaOS runtime
-let kv: { set: (key: string, val: string) => Promise<void> };
+let kv: { set: (key: string, val: string) => Promise<void>; get?: (key: string) => Promise<string | null> }; // Added 'get' for completeness in case it's used elsewhere, though not directly in this file's main logic.
 
 try {
-  kv = await import("@elizaos/kv");
+  // Attempt to import the ElizaOS KV store
+  const elizaKv = await import("@elizaos/kv");
+  kv = {
+    set: elizaKv.set,
+    get: elizaKv.get // Ensure 'get' is also assigned if available from ElizaOS KV
+  };
 } catch (e) {
-  console.warn(" Falling back to local KV");
+  // Fallback to local file-based KV if ElizaOS KV is not available (e.g., when running agent.ts directly for testing)
+  console.warn(" Falling back to local KV for agent.ts");
   const fs = await import("fs/promises");
   kv = {
     set: async (key: string, val: string) => {
       await fs.writeFile(`.local-kv-${key}.json`, val, "utf-8");
+    },
+    get: async (key: string) => { // Added 'get' for the local fallback too
+      try {
+        return await fs.readFile(`.local-kv-${key}.json`, "utf-8");
+      } catch (readError) {
+        return null;
+      }
     },
   };
 }
@@ -34,8 +48,8 @@ interface StrategyResult {
 }
 
 // ====== Constants ======
-const DEFILLAMA_API = "https://yields.llama.fi";
-const COINGECKO_API = "https://api.coingecko.com/api/v3";
+const DEFILLAMA_API = process.env.DEFILLAMA_API || "https://yields.llama.fi"; // Reads from env, with a fallback
+const COINGECKO_API = process.env.COINGECKO_API || "https://api.coingecko.com/api/v3";
 const USDC_CG_ID = "usd-coin";
 const DAYS_LOOKBACK = 25;
 
@@ -122,6 +136,7 @@ async function runForRisk(risk: RiskLevel) {
 
     await kv.set(`strategy:${risk}`, JSON.stringify(result));
     console.log(` Stored ${risk}-risk strategy:`, result);
+
   } catch (err) {
     console.error(` Failed to process ${risk} strategy:`, err);
   }
@@ -134,9 +149,10 @@ export async function main() {
 }
 
 // ====== Run Periodically or Once ======
+// This block ensures the agent logic runs when agent.ts is executed directly,
+// or when imported and called by src/index.ts. The setInterval is appropriate here.
 if (import.meta.url === `file://${process.argv[1]}`) {
-  // Run every 15 minutes if you want
-  const INTERVAL_MS = 15 * 60 * 1000;
+  const INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
   console.log(" Eliza strategy agent started (15 min interval)");
 

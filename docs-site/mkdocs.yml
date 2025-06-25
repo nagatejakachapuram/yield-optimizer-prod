@@ -1,0 +1,48 @@
+site_name: AI Yield Optimizer
+site_description: AI-powered ERC4626 vaults with dynamic Chainlink Automation
+site_author: Your Protocol Team
+repo_url: https://github.com/nagatejakachapuram/yield-optimizer-prod/tree/automation
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    primary: blue
+    accent: deep orange
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.tabs
+    - toc.integrate
+    - content.code.copy
+    - content.action.edit
+    - search.highlight
+    - search.share
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Smart Contract API: api.md
+  - AI Agent: ai-agent.md
+  - Usage Guide: usage.md
+  - Developer Guide: developer.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.keys
+
+plugins:
+  - search
