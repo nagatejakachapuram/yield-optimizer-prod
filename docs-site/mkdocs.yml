@@ -1,48 +1,58 @@
-site_name: AI Yield Optimizer
-site_description: AI-powered ERC4626 vaults with dynamic Chainlink Automation
-site_author: Your Protocol Team
-repo_url: https://github.com/nagatejakachapuram/yield-optimizer-prod/tree/automation
-edit_uri: edit/main/docs/
-
+site_name: Yield Optimizer Vaults
+# site_url: https://james-willett.github.io/mkdocs-material-youtube-tutorial/
 theme:
   name: material
-  palette:
-    primary: blue
-    accent: deep orange
   features:
-    - navigation.instant
-    - navigation.sections
     - navigation.tabs
+    - navigation.sections
     - toc.integrate
-    - content.code.copy
-    - content.action.edit
+    - navigation.top
+    - search.suggest
     - search.highlight
-    - search.share
-  icon:
-    repo: fontawesome/brands/github
-
-nav:
-  - Home: index.md
-  - Architecture: architecture.md
-  - Smart Contract API: api.md
-  - AI Agent: ai-agent.md
-  - Usage Guide: usage.md
-  - Developer Guide: developer.md
-
-markdown_extensions:
-  - admonition
-  - codehilite
-  - footnotes
-  - tables
-  - toc:
-      permalink: true
-  - pymdownx.superfences
-  - pymdownx.tabbed
-  - pymdownx.details
-  - pymdownx.highlight
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.keys
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+      primary: teal
+      accent: purple
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+      primary: teal
+      accent: lime
 
 plugins:
+  - social
   - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/nagatejakachapuram/
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/techsteck/
+    - icon: fontawesome/solid/globe # A generic globe icon for a website
+      link: https://www.techsteck.com/ # Replace with the actual Techsteck website URL
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.mark
+  - attr_list
+
+copyright: |
+  &copy; 2025 <a href="https://github.com/nagatejakachapuram"  target="_blank" rel="noopener">TechSteck Solutions</a>
