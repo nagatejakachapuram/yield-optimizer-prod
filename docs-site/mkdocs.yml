@@ -1,5 +1,4 @@
-site_name: Yield Optimizer Vaults
-# site_url: https://james-willett.github.io/mkdocs-material-youtube-tutorial/
+site_name: Yield Optimizer Vault
 theme:
   name: material
   features:
