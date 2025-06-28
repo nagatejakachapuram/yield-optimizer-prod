@@ -1,5 +1,5 @@
 
-# 🤖 AI Agent: Off-Chain Market Intelligence
+# 🤖 AI Agent
 
 The off-chain AI agent is a core intelligence layer of the Yield Optimizer protocol, built using **ElizaOS**. It continuously monitors DeFi markets and computes the most suitable strategy based on user risk preferences. The output is stored in ElizaOS Key-Value (KV) storage and accessed by **Chainlink Automation** to update vault strategy allocations.
 
