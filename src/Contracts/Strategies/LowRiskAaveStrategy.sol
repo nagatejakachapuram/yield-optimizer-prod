@@ -8,22 +8,11 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// @notice Minimal Aave Pool interface required for deposits/withdrawals and data fetching
 interface IAavePool {
-    function supply(
-        address asset,
-        uint256 amount,
-        address onBehalfOf,
-        uint16 referralCode
-    ) external;
+    function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
 
-    function withdraw(
-        address asset,
-        uint256 amount,
-        address to
-    ) external returns (uint256);
+    function withdraw(address asset, uint256 amount, address to) external returns (uint256);
 
-    function getUserAccountData(
-        address user
-    )
+    function getUserAccountData(address user)
         external
         view
         returns (
@@ -77,15 +66,11 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
     /// @notice Withdraws USDC from Aave and returns any potential loss
     /// @param amount Amount requested by the vault to withdraw
     /// @return loss The difference between requested and received amount (if any)
-    function withdraw(
-        uint256 amount
-    ) external override onlyVault nonReentrant returns (uint256 loss) {
+    function withdraw(uint256 amount) external override onlyVault nonReentrant returns (uint256 loss) {
         uint256 before = usdc.balanceOf(address(this));
 
         uint256 withdrawn;
-        try aavePool.withdraw(address(usdc), amount, address(this)) returns (
-            uint256 actualWithdrawn
-        ) {
+        try aavePool.withdraw(address(usdc), amount, address(this)) returns (uint256 actualWithdrawn) {
             withdrawn = actualWithdrawn;
         } catch {
             // Entire withdrawal failed, treat full amount as loss
@@ -114,9 +99,7 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
     /// @notice Estimates total USDC assets currently deposited in Aave
     /// @return The total collateral value according to Aave (in base units)
     function estimatedTotalAssets() public view override returns (uint256) {
-        (uint256 totalCollateral, , , , , ) = aavePool.getUserAccountData(
-            address(this)
-        );
+        (uint256 totalCollateral,,,,,) = aavePool.getUserAccountData(address(this));
         return totalCollateral;
     }
 
@@ -124,14 +107,12 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
     /// @return gain Estimated gain (total collateral in Aave)
     /// @return loss Always 0 for now, as this strategy only tracks gains
     /// @return debtPayment Always 0 (not used in current design)
-    function report()
-        external
-        view
-        override
-        onlyVault
-        returns (uint256 gain, uint256 loss, uint256 debtPayment)
-    {
+    function report() external view override onlyVault returns (uint256 gain, uint256 loss, uint256 debtPayment) {
         uint256 total = estimatedTotalAssets();
         return (total, 0, 0);
     }
+
+    // function estimatedAPY() external pure override returns (uint256) {
+    //     return 400; // mock 4.0% APY
+    // }
 }

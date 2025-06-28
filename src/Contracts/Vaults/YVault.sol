@@ -7,7 +7,8 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {IStrategy} from "../../Interfaces/IStrategy.sol";
 import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
-
+// import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+// import {MockPoRFeedInterface} from "../../Interfaces/MockPoRFeedInterface.sol"; // For future PoR integration
 
 /// @title YVault - A simplified Yearn-style vault
 /// @author
@@ -20,6 +21,12 @@ contract YVault is ReentrancyGuard, Pausable {
 
     /// @notice The ERC20 asset accepted by the vault
     IERC20 public immutable asset;
+
+    // /// @notice
+    // AggregatorV3Interface public dyiOracle;
+
+    // /// @notice Optional Chainlink Proof of Reserve feed
+    // MockPoRFeedInterface public porFeed;
 
     /// @notice The vault name (non-ERC20 standard)
     string public v_name;
@@ -104,7 +111,7 @@ contract YVault is ReentrancyGuard, Pausable {
 
     /// @notice Restricts function to Chainlink keeper
     modifier onlyKeeper() {
-        if (msg.sender != chainlinkKeeper) revert NotVaultOwner(); // reusing error
+        if (msg.sender != chainlinkKeeper) revert NotChainlinkKeeper();
         _;
     }
 
@@ -115,12 +122,7 @@ contract YVault is ReentrancyGuard, Pausable {
     /// @param _name The name of the vault
     /// @param _symbol The symbol of the vault
     /// @param _vaultOwnerSafe The vault owner address
-    constructor(
-        address _token,
-        string memory _name,
-        string memory _symbol,
-        address _vaultOwnerSafe
-    ) {
+    constructor(address _token, string memory _name, string memory _symbol, address _vaultOwnerSafe) {
         if (_token == address(0)) revert ZeroAddress();
         if (_vaultOwnerSafe == address(0)) revert ZeroAddress();
 
@@ -155,7 +157,6 @@ contract YVault is ReentrancyGuard, Pausable {
         emit VaultStrategySet(_strategy);
     }
 
-    
     /// @notice Pauses the vault (stops deposit/withdraw/allocate)
     function pause() external onlyVaultOwner {
         _pause();
@@ -171,18 +172,14 @@ contract YVault is ReentrancyGuard, Pausable {
     /// @notice Deposits assets into the vault and mints shares
     /// @param amount The amount of asset to deposit
     /// @return shares Number of shares minted
-    function deposit(
-        uint256 amount
-    ) external nonReentrant whenNotPaused returns (uint256 shares) {
+    function deposit(uint256 amount) external nonReentrant whenNotPaused returns (uint256 shares) {
         if (amount == 0) revert ZeroAmount();
 
         asset.safeTransferFrom(msg.sender, address(this), amount);
 
         uint256 _totalAssets = v_totalAssets + amount;
 
-        shares = (v_totalShares == 0)
-            ? amount
-            : (amount * v_totalShares) / v_totalAssets;
+        shares = (v_totalShares == 0) ? amount : (amount * v_totalShares) / v_totalAssets;
 
         if (shares == 0) revert InsufficientShares();
 
@@ -196,9 +193,7 @@ contract YVault is ReentrancyGuard, Pausable {
     /// @notice Withdraws assets from the vault by burning shares
     /// @param shares The number of shares to redeem
     /// @return amount The amount of asset returned
-    function withdraw(
-        uint256 shares
-    ) external nonReentrant whenNotPaused returns (uint256 amount) {
+    function withdraw(uint256 shares) external nonReentrant whenNotPaused returns (uint256 amount) {
         if (shares == 0) revert ZeroAmount();
         if (balanceOf[msg.sender] < shares) revert InsufficientShares();
 
@@ -222,56 +217,36 @@ contract YVault is ReentrancyGuard, Pausable {
         emit VaultWithdraw(msg.sender, amount, shares);
     }
 
-
-
     // ========== View Functions ==========
 
     /// @notice Returns the value of 1 share in terms of underlying asset
     /// @return The price per share (1e18 precision)
-    function getPricePerShare() public view returns (uint256) {
-        return
-            (v_totalShares == 0)
-                ? 1e18
-                : (v_totalAssets * 1e18) / v_totalShares;
+    function getPricePerShare() external view returns (uint256) {
+        return (v_totalShares == 0) ? 1e18 : (v_totalAssets * 1e18) / v_totalShares;
     }
 
     /// @notice Returns total assets managed by vault + strategy
     /// @return Total underlying assets
-    function totalAssets() public view returns (uint256) {
-        return
-            asset.balanceOf(address(this)) +
-            currentStrategy.estimatedTotalAssets();
+    function totalAssets() external view returns (uint256) {
+        return asset.balanceOf(address(this)) + currentStrategy.estimatedTotalAssets();
     }
 
     /// @notice Verifies internal accounting matches real balances
     /// @return isConsistent True if balances match or exceed accounting
     /// @return actualAssets Sum of vault + strategy token balances
     /// @return expectedAssets The vault's internally recorded assets
-    function verifyReserves()
-        external
-        view
-        returns (
-            bool isConsistent,
-            uint256 actualAssets,
-            uint256 expectedAssets
-        )
-    {
+    function verifyReserves() external view returns (bool isConsistent, uint256 actualAssets, uint256 expectedAssets) {
         uint256 vaultBal = asset.balanceOf(address(this));
-        uint256 stratBal = address(currentStrategy) != address(0)
-            ? currentStrategy.estimatedTotalAssets()
-            : 0;
-
+        uint256 stratBal = address(currentStrategy) != address(0) ? currentStrategy.estimatedTotalAssets() : 0;
         actualAssets = vaultBal + stratBal;
         expectedAssets = v_totalAssets;
-
-        isConsistent = (actualAssets >= expectedAssets);
+        isConsistent = actualAssets >= expectedAssets;
     }
 
     /// @notice Chainlink keeper-triggered report to update accounting
     function reportIfNeeded() external onlyKeeper {
         if (address(currentStrategy) == address(0)) revert StrategyNotSet();
-        (uint256 gain, uint256 loss, ) = currentStrategy.report();
-
+        (uint256 gain, uint256 loss,) = currentStrategy.report();
         if (gain > 0) {
             v_totalAssets += gain;
         } else if (loss > 0) {
@@ -285,22 +260,18 @@ contract YVault is ReentrancyGuard, Pausable {
     /// @param token The token address to recover
     /// @param to Recipient of the recovered tokens
     /// @param amount Amount to recover
-    function recoverERC20(
-        address token,
-        address to,
-        uint256 amount
-    ) external onlyVaultOwner {
+    function recoverERC20(address token, address to, uint256 amount) external onlyVaultOwner {
         if (token == address(asset)) revert(); // protect core asset
         if (to == address(0)) revert ZeroAddress();
         IERC20(token).safeTransfer(to, amount);
     }
 
-       // ========== Automation Functions ==========
+    // ========== Automation Functions ==========
 
-           /// @notice Updates accounting by pulling report from current strategy
-    function reportFromStrategy() internal {
+    /// @notice Updates accounting by pulling report from current strategy
+    function reportFromStrategy() external {
         if (address(currentStrategy) == address(0)) revert StrategyNotSet();
-        (uint256 gain, uint256 loss, ) = currentStrategy.report();
+        (uint256 gain, uint256 loss,) = currentStrategy.report();
 
         if (gain > 0) {
             v_totalAssets += gain;
@@ -311,12 +282,17 @@ contract YVault is ReentrancyGuard, Pausable {
         emit VaultStrategyReported(gain, loss, v_totalAssets);
     }
 
-        /// @notice Allocates funds from the vault to the active strategy
+    /// @notice Allocates funds from the vault to the active strategy
     /// @param amount The amount to allocate
-    function allocateFunds(uint256 amount) internal whenNotPaused {
-        if (amount > asset.balanceOf(address(this)))
+    function allocateFunds(uint256 amount) external whenNotPaused {
+        if (amount > asset.balanceOf(address(this))) {
             revert InsufficientVaultBalance();
+        }
         if (address(currentStrategy) == address(0)) revert StrategyNotSet();
+        // int256 dyi = _getDYI();
+        // uint256 strategyAPY = IStrategy(currentStrategy).estimatedAPY();
+
+        // require(int256(strategyAPY) >= dyi, "Strategy yield < Chainlink DYI");
 
         asset.safeTransfer(address(currentStrategy), amount);
         currentStrategy.allocate(address(this), amount);
@@ -324,11 +300,19 @@ contract YVault is ReentrancyGuard, Pausable {
         emit FundsAllocated(amount);
     }
 
-    function checkUpkeep(bytes calldata /* checkData */) external view override returns (bool upkeepNeeded, bytes memory performData) {
+    // function setDYIOracle(address _oracle) external onlyVaultOwner {
+    //     dyiOracle = AggregatorV3Interface(_oracle);
+    // }
+
+    function checkUpkeep(bytes calldata /* checkData */ )
+        external
+        view
+        returns (bool upkeepNeeded, bytes memory performData)
+    {
         // Automation 1: Allocate idle funds
         uint256 idleFunds = asset.balanceOf(address(this));
         bool shouldAllocate = idleFunds > 0 && address(currentStrategy) != address(0);
-        
+
         // Automation 2: Report from strategy (e.g., check every 24 hours)
         // Note: A real implementation might have more complex logic here.
         // For simplicity, we assume we want to report periodically.
@@ -336,22 +320,45 @@ contract YVault is ReentrancyGuard, Pausable {
         bool shouldReport = address(currentStrategy) != address(0);
 
         upkeepNeeded = shouldAllocate || shouldReport;
-        
+
         // Encode which function to call in performUpkeep
         if (shouldAllocate) {
             performData = abi.encodeWithSelector(this.allocateFunds.selector, idleFunds);
         } else if (shouldReport) {
-            performData = abi.encodeWithSelector(this.reportFromStrategy.selector);
+            performData = abi.encodeWithSelector(this.reportFromStrategy.selector, idleFunds);
         }
     }
 
-    function performUpkeep(bytes calldata performData) external override {
+    function performUpkeep(bytes calldata performData) external {
         // We decode the performData to call the correct function
-        (bool success, ) = address(this).call(performData);
+        (bool success,) = address(this).call(performData);
         require(success, "PerformUpkeep failed");
     }
 
+    /*
+    /// @notice Set the Chainlink Defi Yield Index
+    /// @param _porFeed Address of the PoR feed contract
+    // function _getDYI() internal view returns (int256) {
+    //     (, int256 yield,,,) = dyiOracle.latestRoundData();
+    //     return yield;
+    // }
+    */
 
+    /*
+    /// @notice Set the Chainlink Proof of Reserve feed (PoR)
+    /// @param _porFeed Address of the PoR feed contract
+    function setPoRFeed(address _porFeed) external onlyVaultOwner {
+        if (_porFeed == address(0)) revert ZeroAddress();
+        porFeed = MockPoRFeedInterface(_porFeed);
+    }
+    */
 
+    /*
+    /// @notice Check the Proof of Reserve status from Chainlink
+    /// @return isHealthy True if the reserve backing is healthy
+    function checkPoRHealthy() public view returns (bool isHealthy) {
+        require(address(porFeed) != address(0), "PoR feed not set");
+        return porFeed.isHealthy();
+    }
+    */
 }
-    

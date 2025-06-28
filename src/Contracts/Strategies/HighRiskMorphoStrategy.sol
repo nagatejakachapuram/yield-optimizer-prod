@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-
 /// @title HighRiskMorphoStrategy
 /// @notice A high-risk yield strategy that supplies USDC into a Morpho market
 /// @dev Designed for integration with a vault and the Morpho lending protocol
@@ -28,17 +27,9 @@ contract HighRiskMorphoStrategy is IStrategy, Ownable, ReentrancyGuard {
     /// @param _morpho The address of the Morpho protocol contract
     /// @param _usdcMarket The Morpho market address for USDC
     /// @param _vault The vault address using this strategy
-    constructor(
-        address _usdc,
-        address _morpho,
-        address _usdcMarket,
-        address _vault
-    ) {
+    constructor(address _usdc, address _morpho, address _usdcMarket, address _vault) {
         require(
-            _usdc != address(0) &&
-                _morpho != address(0) &&
-                _usdcMarket != address(0) &&
-                _vault != address(0),
+            _usdc != address(0) && _morpho != address(0) && _usdcMarket != address(0) && _vault != address(0),
             "Invalid address"
         );
         usdc = IERC20(_usdc);
@@ -66,9 +57,7 @@ contract HighRiskMorphoStrategy is IStrategy, Ownable, ReentrancyGuard {
     /// @notice Withdraws USDC from Morpho
     /// @param amountNeeded The amount requested to be withdrawn by the vault
     /// @return loss The difference between expected and actual USDC received (if any)
-    function withdraw(
-        uint256 amountNeeded
-    ) external override onlyVault nonReentrant returns (uint256 loss) {
+    function withdraw(uint256 amountNeeded) external override onlyVault nonReentrant returns (uint256 loss) {
         uint256 beforeBalance = usdc.balanceOf(address(this));
         morpho.withdraw(usdcMarket, amountNeeded, address(this));
         uint256 afterBalance = usdc.balanceOf(address(this));
@@ -101,14 +90,12 @@ contract HighRiskMorphoStrategy is IStrategy, Ownable, ReentrancyGuard {
     /// @return gain Current total balance in Morpho
     /// @return loss Always 0
     /// @return debtPayment Always 0
-    function report()
-        external
-        view
-        override
-        onlyVault
-        returns (uint256 gain, uint256 loss, uint256 debtPayment)
-    {
+    function report() external view override onlyVault returns (uint256 gain, uint256 loss, uint256 debtPayment) {
         uint256 total = estimatedTotalAssets();
         return (total, 0, 0);
     }
+
+    // function estimatedAPY() external pure override returns (uint256) {
+    //     return 400; // mock 4.0% APY
+    // }
 }

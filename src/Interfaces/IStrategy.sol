@@ -25,4 +25,6 @@ interface IStrategy {
     /// @return loss Amount of loss realized since last report
     /// @return debtPayment Amount of capital returned to the vault during the report
     function report() external returns (uint256 gain, uint256 loss, uint256 debtPayment);
+
+    // function estimatedAPY() external view returns (uint256);
 }

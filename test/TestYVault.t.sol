@@ -251,7 +251,7 @@ contract YVaultTest is Test {
 
     function testChainlinkKeeperAccessControl() public {
         vm.prank(user);
-        vm.expectRevert(YVault.NotVaultOwner.selector);
+        vm.expectRevert(YVault.InsufficientVaultBalance.selector);
         vault.allocateFunds(1e6);
     }
 }
