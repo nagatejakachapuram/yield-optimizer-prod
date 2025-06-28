@@ -59,14 +59,14 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
     function allocate(
         address, // ignored
         uint256 amount
-    ) external override onlyVault nonReentrant {
+    ) external override nonReentrant onlyVault {
         aavePool.supply(address(usdc), amount, address(this), 0);
     }
 
     /// @notice Withdraws USDC from Aave and returns any potential loss
     /// @param amount Amount requested by the vault to withdraw
     /// @return loss The difference between requested and received amount (if any)
-    function withdraw(uint256 amount) external override onlyVault nonReentrant returns (uint256 loss) {
+    function withdraw(uint256 amount) external override nonReentrant onlyVault returns (uint256 loss) {
         uint256 before = usdc.balanceOf(address(this));
 
         uint256 withdrawn;
@@ -92,7 +92,7 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
 
     /// @notice Approves Aave to spend unlimited USDC from this strategy
     /// @dev Must be called once before `allocate` can succeed
-    function approveSpending() public {
+    function approveSpending() external {
         IERC20(usdc).approve(address(aavePool), type(uint256).max);
     }
 
@@ -111,8 +111,4 @@ contract LowRiskAaveStrategy is IStrategy, Ownable, ReentrancyGuard {
         uint256 total = estimatedTotalAssets();
         return (total, 0, 0);
     }
-
-    // function estimatedAPY() external pure override returns (uint256) {
-    //     return 400; // mock 4.0% APY
-    // }
 }

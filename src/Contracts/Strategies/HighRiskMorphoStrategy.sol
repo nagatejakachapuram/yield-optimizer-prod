@@ -49,7 +49,7 @@ contract HighRiskMorphoStrategy is IStrategy, Ownable, ReentrancyGuard {
     function allocate(
         address, // unused
         uint256 amount
-    ) external override onlyVault nonReentrant {
+    ) external override nonReentrant onlyVault {
         require(usdc.balanceOf(address(this)) >= amount, "Not enough USDC");
         morpho.supply(usdcMarket, amount, address(this));
     }
@@ -57,7 +57,7 @@ contract HighRiskMorphoStrategy is IStrategy, Ownable, ReentrancyGuard {
     /// @notice Withdraws USDC from Morpho
     /// @param amountNeeded The amount requested to be withdrawn by the vault
     /// @return loss The difference between expected and actual USDC received (if any)
-    function withdraw(uint256 amountNeeded) external override onlyVault nonReentrant returns (uint256 loss) {
+    function withdraw(uint256 amountNeeded) external override nonReentrant onlyVault returns (uint256 loss) {
         uint256 beforeBalance = usdc.balanceOf(address(this));
         morpho.withdraw(usdcMarket, amountNeeded, address(this));
         uint256 afterBalance = usdc.balanceOf(address(this));
@@ -94,8 +94,4 @@ contract HighRiskMorphoStrategy is IStrategy, Ownable, ReentrancyGuard {
         uint256 total = estimatedTotalAssets();
         return (total, 0, 0);
     }
-
-    // function estimatedAPY() external pure override returns (uint256) {
-    //     return 400; // mock 4.0% APY
-    // }
 }

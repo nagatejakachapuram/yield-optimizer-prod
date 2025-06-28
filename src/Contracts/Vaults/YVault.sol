@@ -7,11 +7,8 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {IStrategy} from "../../Interfaces/IStrategy.sol";
 import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
-// import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
-// import {MockPoRFeedInterface} from "../../Interfaces/MockPoRFeedInterface.sol"; // For future PoR integration
 
 /// @title YVault - A simplified Yearn-style vault
-/// @author
 /// @notice Accepts a single ERC20 token, mints vault shares, and allocates funds to an external strategy.
 /// @dev Compatible with Chainlink Automation via keeper, and includes pausability, reentrancy protection, and ERC20-style interface (limited).
 contract YVault is ReentrancyGuard, Pausable {
@@ -21,12 +18,6 @@ contract YVault is ReentrancyGuard, Pausable {
 
     /// @notice The ERC20 asset accepted by the vault
     IERC20 public immutable asset;
-
-    // /// @notice
-    // AggregatorV3Interface public dyiOracle;
-
-    // /// @notice Optional Chainlink Proof of Reserve feed
-    // MockPoRFeedInterface public porFeed;
 
     /// @notice The vault name (non-ERC20 standard)
     string public v_name;
@@ -174,6 +165,7 @@ contract YVault is ReentrancyGuard, Pausable {
     /// @return shares Number of shares minted
     function deposit(uint256 amount) external nonReentrant whenNotPaused returns (uint256 shares) {
         if (amount == 0) revert ZeroAmount();
+        if (msg.sender == address(0)) revert ZeroAddress();
 
         asset.safeTransferFrom(msg.sender, address(this), amount);
 
@@ -289,20 +281,12 @@ contract YVault is ReentrancyGuard, Pausable {
             revert InsufficientVaultBalance();
         }
         if (address(currentStrategy) == address(0)) revert StrategyNotSet();
-        // int256 dyi = _getDYI();
-        // uint256 strategyAPY = IStrategy(currentStrategy).estimatedAPY();
-
-        // require(int256(strategyAPY) >= dyi, "Strategy yield < Chainlink DYI");
 
         asset.safeTransfer(address(currentStrategy), amount);
         currentStrategy.allocate(address(this), amount);
 
         emit FundsAllocated(amount);
     }
-
-    // function setDYIOracle(address _oracle) external onlyVaultOwner {
-    //     dyiOracle = AggregatorV3Interface(_oracle);
-    // }
 
     function checkUpkeep(bytes calldata /* checkData */ )
         external
@@ -334,31 +318,4 @@ contract YVault is ReentrancyGuard, Pausable {
         (bool success,) = address(this).call(performData);
         require(success, "PerformUpkeep failed");
     }
-
-    /*
-    /// @notice Set the Chainlink Defi Yield Index
-    /// @param _porFeed Address of the PoR feed contract
-    // function _getDYI() internal view returns (int256) {
-    //     (, int256 yield,,,) = dyiOracle.latestRoundData();
-    //     return yield;
-    // }
-    */
-
-    /*
-    /// @notice Set the Chainlink Proof of Reserve feed (PoR)
-    /// @param _porFeed Address of the PoR feed contract
-    function setPoRFeed(address _porFeed) external onlyVaultOwner {
-        if (_porFeed == address(0)) revert ZeroAddress();
-        porFeed = MockPoRFeedInterface(_porFeed);
-    }
-    */
-
-    /*
-    /// @notice Check the Proof of Reserve status from Chainlink
-    /// @return isHealthy True if the reserve backing is healthy
-    function checkPoRHealthy() public view returns (bool isHealthy) {
-        require(address(porFeed) != address(0), "PoR feed not set");
-        return porFeed.isHealthy();
-    }
-    */
 }
