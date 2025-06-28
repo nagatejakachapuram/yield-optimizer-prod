@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../Main%20Contracts/">
       
       
-        <link rel="next" href="../api/">
+        <link rel="next" href="../architecture/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Ai agent - Yield Optimizer Vault</title>
+        <title>🤖 AI Agent: Off-Chain Market Intelligence - Yield Optimizer Vault</title>
       
     
     
@@ -55,7 +55,7 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Ai agent - Yield Optimizer Vault" >
+        <meta  property="og:title"  content="🤖 AI Agent: Off-Chain Market Intelligence - Yield Optimizer Vault" >
       
         <meta  property="og:description"  content="None" >
       
@@ -71,7 +71,7 @@
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Ai agent - Yield Optimizer Vault" >
+        <meta  name="twitter:title"  content="🤖 AI Agent: Off-Chain Market Intelligence - Yield Optimizer Vault" >
       
         <meta  name="twitter:description"  content="None" >
       
@@ -132,7 +132,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Ai agent
+              🤖 AI Agent: Off-Chain Market Intelligence
             
           </span>
         </div>
@@ -250,17 +250,15 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../Main%20Contracts/" class="md-tabs__link">
         
   
   
     
   
-  Ai agent
+  Main Contracts
 
       </a>
     </li>
@@ -271,15 +269,17 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../api/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
     
   
-  Api
+  🤖 AI Agent: Off-Chain Market Intelligence
 
       </a>
     </li>
@@ -404,6 +404,28 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../Main%20Contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Main Contracts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -421,7 +443,7 @@
   
   
   <span class="md-ellipsis">
-    Ai agent
+    🤖 AI Agent: Off-Chain Market Intelligence
     
   </span>
   
@@ -434,7 +456,7 @@
   
   
   <span class="md-ellipsis">
-    Ai agent
+    🤖 AI Agent: Off-Chain Market Intelligence
     
   </span>
   
@@ -457,9 +479,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#responsibilities" class="md-nav__link">
+  <a href="#core-responsibilities" class="md-nav__link">
     <span class="md-ellipsis">
-      🎯 Responsibilities
+      🎯 Core Responsibilities
     </span>
   </a>
   
@@ -475,9 +497,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-strategy-logic" class="md-nav__link">
+  <a href="#example-decision-logic" class="md-nav__link">
     <span class="md-ellipsis">
-      💡 Example Strategy Logic
+      💡 Example Decision Logic
     </span>
   </a>
   
@@ -496,28 +518,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Api
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -604,69 +604,80 @@
 
 
 
-<hr />
 <h1 id="ai-agent-off-chain-market-intelligence">🤖 AI Agent: Off-Chain Market Intelligence</h1>
-<p>The off-chain AI agent is a critical component built using <strong>ElizaOS</strong>. Its primary role is to analyze real-time market data and determine optimal strategy decisions, which are then stored in ElizaOS Key-Value (KV) storage for consumption by Chainlink Automation.</p>
+<p>The off-chain AI agent is a core intelligence layer of the Yield Optimizer protocol, built using <strong>ElizaOS</strong>. It continuously monitors DeFi markets and computes the most suitable strategy based on user risk preferences. The output is stored in ElizaOS Key-Value (KV) storage and accessed by <strong>Chainlink Automation</strong> to update vault strategy allocations.</p>
 <hr />
-<h2 id="responsibilities">🎯 Responsibilities</h2>
-<p>The AI agent is engineered to perform the following core functions:</p>
+<h2 id="core-responsibilities">🎯 Core Responsibilities</h2>
+<p>The AI agent is responsible for:</p>
 <ul>
-<li><strong>Market Monitoring:</strong> Continuously observes and analyzes market conditions, including price trends and changes in decentralized finance (DeFi) yields.</li>
-<li><strong>Optimal Pool Selection:</strong> Identifies and selects the most suitable DeFi liquidity pools or protocols based on predefined risk profiles.</li>
-<li><strong>Strategy Storage:</strong> Persists the chosen strategy address for each vault type (e.g., based on risk profile) in the ElizaOS KV storage.</li>
+<li><strong>Real-Time Market Analysis</strong>: Continuously monitors DeFi market trends, stablecoin yields, and platform-specific APYs using data from sources like CoinGecko, Aave, Morpho, Curve, Defillama and Lookonchain.</li>
+<li><strong>Strategy Selection</strong>: Determines the optimal yield pool based on current market conditions and predefined risk profiles (e.g., low, high).</li>
+<li><strong>KV Storage of Recommendations</strong>: Outputs structured strategy recommendations and stores them under designated keys (e.g., <code>low.json</code>, <code>high.json</code>) in ElizaOS KV storage.</li>
 </ul>
 <hr />
 <h2 id="workflow-overview">🚀 Workflow Overview</h2>
-<p>The AI agent integrates seamlessly into the YVault protocol's operations through the following steps:</p>
+<p>The integration between the AI agent, YVault smart contracts, and Chainlink Automation follows this lifecycle:</p>
 <ol>
 <li>
-<p><strong>User Deposit &amp; Risk Selection:</strong> A user deposits USDC into a <code>YVault</code> and specifies their desired risk preference (e.g., low, high).</p>
+<p><strong>User Deposit &amp; Risk Selection</strong>
+   Users deposit USDC into a <code>YVault</code> contract and select a preferred risk level (e.g., low or high).</p>
 </li>
 <li>
-<p><strong>Vault Logs Deposit:</strong> The <code>YVault</code> contract registers the deposit but <em>does not immediately allocate</em> the funds to a strategy.</p>
+<p><strong>Vault Records Deposit</strong>
+   The <code>YVault</code> registers the deposit but does not immediately allocate funds to a strategy.</p>
 </li>
 <li>
-<p><strong>AI Agent Execution:</strong> The AI agent runs periodically (e.g., every few hours or once a day). During its execution, it queries various DeFi data sources such as Aave, Morpho, Curve, Lookonchain, and CoinGecko.</p>
+<p><strong>Periodic AI Execution</strong>
+   The AI agent runs periodically (e.g., every few hours), gathering real-time DeFi data from platforms like Aave, Morpho, Curve, and CoinGecko.</p>
 </li>
 <li>
-<p><strong>Strategy Selection:</strong> Based on its market classification (e.g., bullish, bearish, sideways, volatile), the AI selects the most appropriate <code>IStrategy</code> contract address for each defined risk profile.</p>
+<p><strong>Market Classification &amp; Strategy Selection</strong>
+   The agent classifies the market (e.g., uptrend, downtrend, sideways) and chooses the most appropriate pool for each risk level.</p>
 </li>
 <li>
-<p><strong>Decision Storage in KV:</strong> The AI agent writes its strategy decisions to the ElizaOS KV store in a structured JSON format.</p>
+<p><strong>Result Storage in KV</strong>
+   The selected strategy is stored in ElizaOS KV under separate keys (e.g., <code>low.json</code>, <code>high.json</code>) in the following JSON format:</p>
+</li>
+</ol>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;low&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0xLowRiskAaveStrategyAddress&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;high&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0xHighRiskMorphoStrategyAddress&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;medium&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0xMediumRiskCurveStrategyAddress&quot;</span><span class="w"> </span><span class="c1">// Example of additional profiles</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1751090934932</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;trend&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uptrend&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;risk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">&quot;selectedPool&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">&quot;address&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;363b9e0e-28c4-4153-9fff-f2f9ac2d3a3c&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="nt">&quot;apy&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6.84981</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">&quot;platform&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Morpho&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">&quot;asset&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;USDC&quot;</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">}</span>
 </code></pre></div>
+<ol>
+<li>
+<p><strong>Chainlink Automation Trigger</strong>
+   A Chainlink Automation Keeper monitors the KV store. When a new strategy update is detected, it triggers the <code>AutomationOwner.updateVaultStrategy()</code> function.</p>
 </li>
 <li>
-<p><strong>Chainlink Automation Trigger:</strong> A Chainlink Automation Keeper monitors the ElizaOS KV store. Upon detecting an updated strategy decision, it triggers its execution.</p>
-</li>
-<li>
-<p><strong>Strategy Update Call:</strong> The Chainlink Automation Keeper calls <code>AutomationOwner.updateVaultStrategy()</code>, passing the new strategy address for the relevant <code>YVault</code>.</p>
-</li>
-<li>
-<p><strong>Fund Allocation:</strong> Subsequently, <code>YVault.allocateFunds()</code> is invoked, which then directs the newly deposited funds (and potentially rebalances existing ones) to the newly set optimal strategy.</p>
+<p><strong>Vault Fund Allocation</strong>
+   After the vault strategy is updated, <code>YVault.allocateFunds()</code> is invoked to allocate both new and idle funds into the selected on-chain strategy.</p>
 </li>
 </ol>
 <hr />
-<h2 id="example-strategy-logic">💡 Example Strategy Logic</h2>
-<p>The AI agent's decision-making can be configured with diverse logic. Here are some illustrative examples:</p>
+<h2 id="example-decision-logic">💡 Example Decision Logic</h2>
+<p>The AI agent’s decision-making process can be configured with various logic models. Some examples include:</p>
 <ul>
-<li><strong>Stable Market/Yields:</strong> If stablecoin yields consistently exceed 4% and the overall market remains flat or sideways, the agent might choose a low-risk strategy utilizing <strong>Aave</strong> for lending.</li>
-<li><strong>Bullish ETH/High APY:</strong> If the Ethereum market shows a strong upward trend over a 7-day or 25-day period and <strong>Aave Protocol</strong> pools offer particularly high APYs, the agent might select a strategy focused on Aave liquidity provision.</li>
+<li><strong>Stable Yields + Sideways Market</strong>: In periods of market stability and consistent yields (e.g., &gt;4%), the AI may allocate low-risk users to Aave lending markets.</li>
+<li><strong>Bullish Trends + High APY</strong>: In an uptrend scenario, with surging ETH prices and attractive stablecoin yields on Morpho, the AI may choose a high-risk Morpho strategy.</li>
 </ul>
 <hr />
 <h2 id="extensibility">🔌 Extensibility</h2>
-<p>The AI agent is designed with extensibility in mind, allowing for continuous improvement and adaptation:</p>
+<p>The AI agent is designed with flexibility and future-proofing in mind:</p>
 <ul>
-<li><strong>Additional Data Sources:</strong> Integrate more data providers such as Dune Analytics, Pendle Finance, or custom on-chain data.</li>
-<li><strong>Custom Thresholds:</strong> Fine-tune the decision-making logic by adjusting yield thresholds, market movement percentages, and other parameters.</li>
-<li><strong>User Sentiment Integration:</strong> Incorporate external data on user sentiment or social media trends to inform strategic decisions.</li>
+<li><strong>New Data Sources</strong>: Easily integrate additional data providers such as Pendle, Dune Analytics, or custom smart contract analytics.</li>
+<li><strong>Custom Risk Rules</strong>: Modify thresholds (e.g., volatility, APY floors) to fine-tune how strategies are selected per market regime.</li>
+<li><strong>Sentiment &amp; Social Data</strong>: Extend logic to include social indicators or sentiment analysis from platforms like X (Twitter) or Discord.</li>
 </ul>
 <hr />
-<p>For detailed instructions on how to integrate more DeFi protocols or replace the underlying ElizaOS framework, please refer to the <a href="../developer-docs/">developer-docs.md</a> guide.</p>
+<p>For details on expanding protocol support or customizing the ElizaOS integration, refer to the <a href="../developer-docs/">developer-docs.md</a> guide.</p>
 
 
 
