@@ -1,8 +1,6 @@
 # Yield Optimizer Protocol
 
 <div align="center">
-
-![Yield Optimizer Protocol](https://img.shields.io/badge/Yield-Optimizer-Protocol-blue?style=for-the-badge&logo=ethereum)
 ![Solidity](https://img.shields.io/badge/Solidity-0.8.28-363636?style=for-the-badge&logo=solidity)
 ![Foundry](https://img.shields.io/badge/Foundry-1.0.0-orange?style=for-the-badge&logo=ethereum)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=for-the-badge&logo=typescript)
