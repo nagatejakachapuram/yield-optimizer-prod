@@ -48,6 +48,14 @@ contract YVault is ReentrancyGuard, Pausable {
     /// @notice The address of Chainlink Automation keeper
     address public chainlinkKeeper;
 
+    /// @notice Timestamp of the last report from the strategy
+    uint256 public lastReportTimestamp;
+
+    // ========== Constants ==========
+
+    /// @notice The interval at which the strategy should report gains/losses
+    uint256 public constant REPORT_INTERVAL = 1 days;
+
     // ========== Events ==========
 
     /// @notice Emitted on deposit
@@ -298,7 +306,7 @@ contract YVault is ReentrancyGuard, Pausable {
        // ========== Automation Functions ==========
 
            /// @notice Updates accounting by pulling report from current strategy
-    function reportFromStrategy() internal {
+    function reportFromStrategy() external {
         if (address(currentStrategy) == address(0)) revert StrategyNotSet();
         (uint256 gain, uint256 loss, ) = currentStrategy.report();
 
@@ -307,13 +315,13 @@ contract YVault is ReentrancyGuard, Pausable {
         } else if (loss > 0) {
             v_totalAssets = v_totalAssets > loss ? v_totalAssets - loss : 0;
         }
-
+         lastReportTimestamp = block.timestamp;
         emit VaultStrategyReported(gain, loss, v_totalAssets);
     }
 
         /// @notice Allocates funds from the vault to the active strategy
     /// @param amount The amount to allocate
-    function allocateFunds(uint256 amount) internal whenNotPaused {
+    function allocateFunds(uint256 amount) external whenNotPaused {
         if (amount > asset.balanceOf(address(this)))
             revert InsufficientVaultBalance();
         if (address(currentStrategy) == address(0)) revert StrategyNotSet();
@@ -324,20 +332,15 @@ contract YVault is ReentrancyGuard, Pausable {
         emit FundsAllocated(amount);
     }
 
-    function checkUpkeep(bytes calldata /* checkData */) external view override returns (bool upkeepNeeded, bytes memory performData) {
-        // Automation 1: Allocate idle funds
+      function checkUpkeep(bytes calldata /* checkData */) external view returns (bool upkeepNeeded, bytes memory performData) {
         uint256 idleFunds = asset.balanceOf(address(this));
         bool shouldAllocate = idleFunds > 0 && address(currentStrategy) != address(0);
-        
-        // Automation 2: Report from strategy (e.g., check every 24 hours)
-        // Note: A real implementation might have more complex logic here.
-        // For simplicity, we assume we want to report periodically.
-        // This check can be enhanced to be based on time, profit, or other metrics.
-        bool shouldReport = address(currentStrategy) != address(0);
+
+        bool shouldReport = address(currentStrategy) != address(0) &&
+                            block.timestamp >= lastReportTimestamp + REPORT_INTERVAL;
 
         upkeepNeeded = shouldAllocate || shouldReport;
-        
-        // Encode which function to call in performUpkeep
+
         if (shouldAllocate) {
             performData = abi.encodeWithSelector(this.allocateFunds.selector, idleFunds);
         } else if (shouldReport) {
@@ -345,13 +348,10 @@ contract YVault is ReentrancyGuard, Pausable {
         }
     }
 
-    function performUpkeep(bytes calldata performData) external override {
-        // We decode the performData to call the correct function
-        (bool success, ) = address(this).call(performData);
-        require(success, "PerformUpkeep failed");
-    }
-
-
+   function performUpkeep(bytes calldata performData) external {
+    (bool success, ) = address(this).call(performData);
+    require(success, "PerformUpkeep failed");
+}
 
 }
     

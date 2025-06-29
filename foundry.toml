@@ -24,3 +24,6 @@ number_underscore = "thousands"
 sepolia = "${SEPOLIA_RPC_URL}"
 goerli = "${GOERLI_RPC_URL}"
 local = "http://localhost:8545"
+
+[profile.etherscan_api]
+sepolia = "${ETHERSCAN_KEY}"
