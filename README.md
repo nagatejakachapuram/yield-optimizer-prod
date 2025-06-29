@@ -1,133 +1,256 @@
-# AI-Powered Yield Vaults
+# Yield Optimizer Protocol
 
-This repository contains the full stack of smart contracts, strategy interfaces, and mock infrastructure for an AI-powered yield optimization protocol built on top of ERC4626-style Yearn V2 vaults. Users can deposit USDC into vaults, select a risk preference (low or high), and earn yield via dynamically allocated strategies managed off-chain by an AI agent. Strategy selection and execution are triggered on-chain through Chainlink Automation, enabling a modular, intelligent, and secure DeFi yield platform.
+<div align="center">
 
----
+![Yield Optimizer Protocol](https://img.shields.io/badge/Yield-Optimizer-Protocol-blue?style=for-the-badge&logo=ethereum)
+![Solidity](https://img.shields.io/badge/Solidity-0.8.28-363636?style=for-the-badge&logo=solidity)
+![Foundry](https://img.shields.io/badge/Foundry-1.0.0-orange?style=for-the-badge&logo=ethereum)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=for-the-badge&logo=typescript)
 
-## 🏗 Architecture Overview
+**AI-Powered DeFi Yield Optimization Protocol**
 
-### 🔹 `YVault.sol` (Yearn V2-Style Vault)
-* Location: `src/Contracts/YVault.sol`
-* ERC4626-like vault architecture managing USDC deposits.
-* Tracks total assets and user shares.
-* Integrated with a single active strategy, either low or high risk, configurable via `VaultFactory`.
-* Supports `deposit()`, `withdraw()`, and AI-driven `allocateFunds(user, amount, strategy)` function (callable only by `chainlink_admin`).
-* Internal fund routing through strategy interface `IStrategy`.
-* Includes reentrancy protection, admin controls, token recovery, and emergency pause.
+*Intelligently allocates user capital across DeFi strategies using off-chain AI agents and Chainlink Automation*
 
-### 🔹 `VaultFactory.sol`
-* Location: `src/Contracts/VaultFactory.sol`
-* Deploys `YVault` instances dynamically based on risk profiles.
-* Associates each deployed vault with either a low-risk or high-risk strategy at creation.
-* Tracks all deployed vaults.
+[🏗️ Architecture](#-architecture) • [🚀 Quick Start](#-quick-start) • [📚 Documentation](#-documentation) • [🧪 Testing](#-testing) • [🔒 Security](#-security)
 
-### 🔹 Strategy Contracts (Composable Yield Allocators)
-
-All strategies implement the `IStrategy` interface and define custom execution logic for yield generation based on user risk preference.
-
-#### ✅ `LowRiskAaveStrategy.sol`
-* Integrates with `MockAavePool.sol`.
-* Targeted for users selecting "Low Risk".
-* USDC is deposited into a mock Aave-style pool.
-* Strategy calculates yield based on a dynamic APY (basis points passed during deployment).
-
-#### ✅ `HighRiskMorphoStrategy.sol`
-* Integrates with `MockMorpho.sol` (previously `MockPendleMarket`).
-* Targeted for users selecting "High Risk".
-* USDC is allocated to a mock Morpho-style lending/borrowing pool.
-* Supports real-time APY input during contract instantiation.
-
-#### 🧪 `MockStrategy.sol`
-* Simplified strategy for testing vault mechanics.
-* Does not perform real yield generation.
-
-### 🔹 Mocks (Simulated Pool Environments)
-
-Mocks allow local testing and simulation of real DeFi protocols:
-
-* `MockAavePool.sol`: Simulates yield accrual using time-weighted APY.
-* `MockMorpho.sol`: Simulates yield accrual similarly with isolated balance tracking.
-* `MockPriceFeed.sol`: Simulated Chainlink price feed.
+</div>
 
 ---
 
-## 🔁 AI + Chainlink Automation Workflow
+## 📖 Overview
 
-### 1️⃣ **User Deposit via Frontend**
-* User deposits USDC into `YVault` using frontend interface.
-* Selects either "Low Risk" or "High Risk" strategy.
-* Funds are deposited into the corresponding vault created via `VaultFactory`.
+The **Yield Optimizer Protocol** is a sophisticated DeFi platform that combines the power of artificial intelligence with blockchain automation to optimize yield generation across multiple DeFi strategies. Built on Ethereum with ERC4626-style vaults, the protocol intelligently allocates user capital based on risk preferences and real-time market conditions.
 
-### 2️⃣ **AI Agent Strategy Selection**
-* An off-chain agent (powered by ElizaOS + AI rules) fetches data from:
-  - CoinGecko
-  - DefiLlama
-  - Aave / Morpho APIs
-  - Historical price trends (7d / 25d)
-* Based on market trend and pool APY, the agent selects the most optimal pool for the user’s selected risk level.
-* Chosen strategy address and metadata (APY, platform, asset) are stored in ElizaOS's `.local-kv-strategy:{risk}.json`.
+### 🌟 Key Features
 
-### 3️⃣ **Chainlink Automation Trigger**
-* Chainlink Automation invokes `allocateFunds(user, amount, strategy)` on the `YVault`.
-* The vault checks `msg.sender` has `chainlink_admin` role.
-* Funds are routed to the specified `IStrategy.allocate()` method.
+- **🧠 AI-Powered Strategy Selection**: Off-chain AI agent analyzes market data from CoinGecko, DeFiLlama, and protocol APIs
+- **⚙️ Chainlink Automation**: Automated on-chain execution of AI recommendations
+- **🎯 Risk-Based Allocation**: Support for Low Risk (Aave) and High Risk (Morpho/Curve) strategies
+- **🔒 Security-First Design**: Multi-sig admin controls, reentrancy protection, and emergency pause functionality
+- **📊 Real-Time Market Analysis**: Dynamic strategy selection based on APY trends and market conditions
 
 ---
 
-## 🔒 Security Considerations
+## 🏗️ Architecture
 
-* ✅ **Multi-sig Admin Access**
-  - Strategy approval, pausing, and recovery restricted to `admin` role.
+### Core Components
 
-* ✅ **Reentrancy Protection**
-  - `nonReentrant` modifiers on key external functions (`deposit`, `withdraw`, `allocateFunds`).
-
-* ✅ **Chainlink Admin Role**
-  - Separate `chainlink_admin` for automation triggers.
-
-* ✅ **SafeERC20 Transfers**
-  - Secure USDC handling using OpenZeppelin libraries.
-
-* 🚨 **Emergency Pause**
-  - Admins can pause the protocol to prevent deposits and withdrawals.
-
-* 🔐 **Token Recovery**
-  - Admins can recover non-core tokens mistakenly sent to the vault.
-
-* 📊 **Upgradeable Strategy Routing**
-  - Each strategy contract (e.g. `HighRiskMorphoStrategy`) can dynamically switch between pools.
-
----
-
-## 🧩 Interfaces
-
-```solidity
-interface IStrategy {
-    function execute(address user, uint256 amount) external;
-}
+```mermaid
+graph TB
+    A[User Deposit] --> B[YVault]
+    B --> C[VaultFactory]
+    C --> D[Strategy Selection]
+    D --> E[Low Risk: Aave]
+    D --> F[High Risk: Morpho]
+    
+    G[AI Agent] --> H[Market Data Analysis]
+    H --> I[Strategy Recommendation]
+    I --> J[Chainlink Automation]
+    J --> K[On-Chain Execution]
+    
+    B --> K
+    E --> K
+    F --> K
 ```
 
+### 1. YVault (Yearn V2-Style Vault)
+
+**Location**: `src/Contracts/Vaults/YVault.sol`
+
+The core vault contract implementing ERC4626-like functionality:
+
+- **Asset Management**: Accepts USDC deposits and tracks user shares
+- **Strategy Integration**: Routes funds to active yield strategies
+- **Security Features**: Reentrancy protection, admin controls, emergency pause
+- **Automation Ready**: Chainlink keeper integration for automated execution
+
+### 2. VaultFactory
+
+**Location**: `src/Contracts/Vaults/VaultFactory.sol`
+
+- **Dynamic Deployment**: Creates vaults based on risk profiles
+- **Strategy Association**: Links vaults with appropriate strategies at creation
+- **Registry Management**: Tracks all deployed vault instances
+
+### 3. Strategy Contracts
+
+- **LowRiskAaveStrategy.sol**: For conservative users, integrates with mock Aave pool.
+- **HighRiskMorphoStrategy.sol**: For aggressive users, integrates with mock Morpho pool.
+- **MockStrategy.sol**: For testing vault mechanics.
+
+### 4. AI Agent (ElizaOS)
+
+**Location**: `eliza-ai-agent/`
+
+- **Data Sources**: CoinGecko, DeFiLlama, Aave/Morpho APIs
+- **Analysis**: Market trend analysis, APY comparison, risk assessment
+- **Output**: Strategy recommendations stored in ElizaOS KV store
+- **Integration**: Seamless connection with Chainlink Automation
+
+### 5. Chainlink Automation
+
+**Location**: `src/ChainlinkIntegration/YVaultKeeper.sol`
+
+- **Trigger**: Scheduled or event-based strategy execution
+- **Security**: Role-based access control for automation functions
+- **Integration**: Direct connection with AI agent recommendations
+
 ---
 
-## 🧪 Local Deployment & Testing
+## 🚀 Quick Start
 
 ### Prerequisites
-* Foundry (`forge`)
-* Node.js (for frontend AI agent)
-* ElizaOS local KV store
 
-### Run Contracts
+- **Foundry**: `curl -L https://foundry.paradigm.xyz | bash`
+- **Node.js**: Version 18+ 
+- **Git**: Latest version
+- **Ethereum Node**: Access to Ethereum mainnet/testnet
+
+### Installation
+
+1. **Clone the Repository**
+    ```bash
+    git clone https://github.com/your-username/yield-optimizer-prod.git
+    cd yield-optimizer-prod
+    ```
+
+2. **Install Dependencies**
+    ```bash
+    # Install Foundry dependencies
+    forge install
+
+    # Install Node.js dependencies
+    npm install
+
+    # Install ElizaOS agent dependencies
+    cd eliza-ai-agent
+    npm install
+    cd ..
+    ```
+
+3. **Environment Setup**
+    ```bash
+    cp .env.example .env
+    # Configure your environment variables
+    ```
+
+### Local Development
+
+1. **Build Contracts**
+    ```bash
+    forge build
+    ```
+
+2. **Run Tests**
+    ```bash
+    forge test
+    ```
+
+3. **Start AI Agent**
+    ```bash
+    cd eliza-ai-agent
+    npm run dev
+    ```
+
+4. **Deploy to Local Network**
+    ```bash
+    anvil
+    forge script script/DeployAll.s.sol --rpc-url http://localhost:8545 --broadcast
+    ```
+
+---
+
+## 🧪 Testing
+
+- **Unit Tests**: Individual contract functionality
+- **Integration Tests**: Cross-contract interactions
+- **Fuzz Tests**: Randomized input testing
+- **Edge Cases**: Boundary conditions and error scenarios
+
 ```bash
-forge build
 forge test
-```
-
-### Run Frontend AI Agent
-```bash
-node agent.js
+forge coverage
 ```
 
 ---
 
+## 🔒 Security
 
+- **Reentrancy Protection**: `nonReentrant` modifiers on critical functions
+- **Multi-Sig Admin**: Role-based access control for administrative functions
+- **Emergency Pause**: Ability to pause protocol operations
+- **Token Recovery**: Admin functions to recover mistakenly sent tokens
+- **Safe Math**: OpenZeppelin SafeERC20 for secure token operations
 
+---
+
+## 📚 Documentation
+
+- **[YVault](./src/Contracts/Vaults/YVault.sol)**: Core vault implementation
+- **[VaultFactory](./src/Contracts/Vaults/VaultFactory.sol)**: Vault deployment factory
+- **[Strategies](./src/Contracts/Strategies/)**: Yield generation strategies
+- **[Interfaces](./src/Interfaces/)**: Contract interfaces and standards
+- **[AI Agent API](./eliza-ai-agent/)**: ElizaOS agent documentation
+- **[Chainlink Integration](./src/ChainlinkIntegration/)**: Automation setup guide
+
+---
+
+## 🚀 Deployment
+
+### Mainnet Deployment
+
+```bash
+export PRIVATE_KEY=your_private_key
+export RPC_URL=your_rpc_url
+export ETHERSCAN_API_KEY=your_etherscan_key
+
+forge script script/DeployAll.s.sol --rpc-url $RPC_URL --broadcast --verify
+```
+
+### Testnet Deployment
+
+```bash
+forge script script/DeployAll.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
+```
+
+---
+
+## 🤝 Contributing
+
+- Fork the Repository
+- Create a Feature Branch
+- Make Changes
+- Add Tests
+- Submit Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Yearn Finance**: Inspiration for vault architecture
+- **Chainlink**: Automation infrastructure
+- **ElizaOS**: AI agent framework
+- **OpenZeppelin**: Security libraries and best practices
+
+---
+
+## 📞 Contact
+
+- **Website**: [https://nagatejakachapuram.github.io/yield-optimizer-prod/](https://nagatejakachapuram.github.io/yield-optimizer-prod/)
+- **GitHub**: [https://github.com/your-username/yield-optimizer-prod](https://github.com/your-username/yield-optimizer-prod)
+- **Discord**: [Join our community](https://discord.gg/yield-optimizer)
+- **Email**: contact@yield-optimizer.com
+
+---
+
+<div align="center">
+
+**Built with ❤️ by the Yield Optimizer Team**
+
+</div>
