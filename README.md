@@ -46,6 +46,11 @@ The **Yield Optimizer Protocol** is a sophisticated DeFi platform that combines 
    USDC_SEPOLIA = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
 ```
 
+## Chainlink Autoamtion Upkeep
+
+https://automation.chain.link/sepolia/371634965542298094432024965539145112188713635505165377177798693816686038288
+https://automation.chain.link/sepolia/6159270574854941854967137437462153565675183198460466722719413083942550900961
+
 ## 🏗️ Architecture
 
 ### Core Components
