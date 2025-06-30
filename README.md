@@ -31,6 +31,21 @@ The **Yield Optimizer Protocol** is a sophisticated DeFi platform that combines 
 
 ---
 
+## Deployed Contracts (Sepolia)
+```
+   MockAavePool: 0x6deb956da4300Fe538efB475D05e818e7D4F3699
+   MockMorpho: 0x779D4755eF3574467Da5B4909629106794A9dd28
+   VaultFactory: 0xd0954eA81Aa99f320C0cB2A6703e1319c196441c
+   LowRiskVault: 0xb32a6FF65dcC2099513970EA5c1eaA87fe564253
+   HighRiskVault: 0x721bF349E453cbFB68536d3a5757A70B74D84279
+   Low Vault Owner: 0xcdd0a2f1Ed2Fcf90486f510F85d9fc1249C21D2e
+   High Vault Owner: 0x204554c6B13f436a30e77B986de525f436b7Cf1C
+
+   LowRiskStrategy: 0x5E7F3A1b83ecC5Bed41F8CC2b13DcD75BeD525Ee
+   HighRiskStrategy: 0xBf84a91eDD1455b7Df150038F2004d00C27ef5c0
+   USDC_SEPOLIA = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
+```
+
 ## 🏗️ Architecture
 
 ### Core Components
